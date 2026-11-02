@@ -1,0 +1,201 @@
+# Collection targets. Every entry was probed on 2026-11-01; see docs/collection-status.md.
+#
+# news outlets: `sitemap` is a Google News sitemap (or a sitemap index pointing to one).
+# `homepage` + `link_pattern` is the fallback when no sitemap is reachable.
+
+outlets:
+  cna:
+    name: 中央社
+    ai_train: false  # robots.txt Content-signal: ai-train=no (checked 2026-11-02): annotate, never train on it
+    sitemap: https://www.cna.com.tw/GoogleNewsSitemap_fromRemote_cfp.xml
+    youtube: UC7ymKGCl6EVLh7z6sq7TBZA
+    history:  # docs/archive-url-schemes.md; own site from 2014-07, Wayback before
+      streams:
+        - method: wayback_cdx
+          prefix: cna.com.tw/news/aipl/{month:%Y%m}
+          url_pattern: /news/aipl/\d{12}
+          last: 2014-06
+          political_url: (?i)/aipl/
+        - method: date_seq
+          template: https://www.cna.com.tw/news/aipl/{date:%Y%m%d}{seq:04d}.aspx
+          seq_max: 450
+          first: 2014-07
+          political_og_url: /news/aipl/
+  ltn:
+    name: 自由時報
+    sitemap: https://news.ltn.com.tw/sitemap.xml
+    youtube: UCrbctXCueK60wHFE2o8YL-Q
+    history:  # paper IDs from 2011-12, breaking news from 2015; non-political IDs redirect away from /politics/
+      streams:
+        - method: id_range
+          template: https://news.ltn.com.tw/news/politics/paper/{id}
+          anchors: [[2011-12-28, 550000], [2013-07-27, 700000], [2016-01-17, 950000], [2020-02-06, 1350000], [2023-08-18, 1600000]]
+        - method: id_range
+          template: https://news.ltn.com.tw/news/politics/breakingnews/{id}
+          first: 2015-01
+          anchors: [[2015-01-08, 1200000], [2016-02-11, 1600000], [2019-08-29, 2900000], [2021-10-11, 3700000], [2023-11-24, 4500000], [2025-10-14, 5200000], [2026-11-02, 5626182]]
+      political_final_url: news\.ltn\.com\.tw/news/politics/
+      redirect_means_other: true
+  udn:
+    name: 聯合報
+    # robots.txt comment reserves LLM / machine-learning / AI use (checked 2026-11-02). Used for non-commercial
+    # research and disclosed in the report (PLAN.md, 資料使用原則).
+    sitemap: https://udn.com/sitemap/gnews/2
+    youtube: UC2M61YK4ntt9iK-23XhDwcw
+    history:  # own site keeps ~10 months; Wayback for the politics desk (story/6656) from 2015.
+      # The pre-2015 /NEWS/ paths are disallowed by udn's robots.txt, so they are not fetched even from Wayback.
+      method: wayback_cdx
+      prefix: udn.com/news/story/6656/
+      url_pattern: /news/story/6656/\d+$
+      first: 2015-01
+      political_url: /story/6656/
+  chinatimes:
+    name: 中國時報
+    sitemap: https://www.chinatimes.com/sitemaps/sitemap_todaynews.xml
+    youtube: UCmdVfsLHu18lCkKYXSOGUxg
+    history:  # numbered time-ordered sitemaps 2009-10..2025-06-17, then date+sequence probing (docs/archive-url-schemes.md)
+      streams:
+        - method: sitemap_numbered
+          index: [https://www.chinatimes.com/sitemaps/sitemap_article_all_index_0.xml, https://www.chinatimes.com/sitemaps/sitemap_article_all_index_1.xml]
+          url_date: /(?:realtimenews|newspapers)/(\d{8})\d{6}-
+          url_pattern: (/realtimenews/\d{14}-260407|/newspapers/\d{14}-2601\d\d)
+          last: 2025-05
+        - method: date_seq
+          template: https://www.chinatimes.com/realtimenews/{date:%Y%m%d}{seq:06d}-260407
+          seq_max: 4600
+          first: 2025-06
+      political_section: [政治]
+      political_og_url: '-260407'  # the request URL always says 260407; og:url gives the real section
+      political_text: true  # 2012-2013 has only paper editions, with no politics section
+  ettoday:
+    name: ETtoday
+    sitemap: https://www.ettoday.net/news-sitemap.xml
+    youtube: UCl3aKvzB7uC5mTlVEWiCogA
+    history:  # global IDs from 2012-01; the date in the URL is corrected by a redirect
+      method: id_range
+      template: https://www.ettoday.net/news/20120101/{id}.htm
+      anchors: [[2012-01-09, 18000], [2012-03-07, 30000], [2015-11-19, 600000], [2019-12-11, 1600000], [2023-12-24, 2650000], [2026-01-29, 3110000], [2026-11-02, 3264615]]
+      political_section: [政治]
+  tvbs:
+    name: TVBS
+    sitemap: https://news.tvbs.com.tw/sitemap/news-sitemap
+    youtube: UC5nwNW4KdC0SzrhF9BXEYOQ
+    history:  # global IDs from 2010, many gaps; any category path returns the page
+      method: id_range
+      template: https://news.tvbs.com.tw/politics/{id}
+      anchors: [[2010-07, 100000], [2013-03, 200000], [2013-08, 300000], [2015-10, 620000], [2017-01, 700000], [2018-09, 1000000], [2019-12-17, 1250000], [2022-12, 2000000], [2024-02, 2400000], [2025-09, 3000000], [2026-01-14, 3100000], [2026-11, 4044440]]
+      political_section: [政治]
+      political_og_url: tvbs\.com\.tw/politics/
+  setn:
+    name: 三立
+    sitemap: https://www.setn.com/sitemapGoogleNews.xml
+    youtube: UCIU8ha-NHmLjtUwU7dFiXUA
+    history:  # global IDs from 2013-09
+      method: id_range
+      template: https://www.setn.com/News.aspx?NewsID={id}
+      first: 2013-10
+      anchors: [[2013-09-23, 1000], [2014-01-10, 10000], [2014-11-26, 50000], [2015-10-13, 100000], [2018-07-04, 400000], [2020-03-02, 700000], [2021-09-20, 1000000], [2026-11-02, 1932029]]
+      political_section: [政治]
+      political_title: '\|\s*政治\s*\|'
+  ftv:
+    name: 民視
+    homepage: https://www.ftvnews.com.tw/
+    link_pattern: '/news/detail/[0-9A-Za-z]+'
+    youtube: UC2VmWn8dAqkzlQqvy02E1PA
+    history:  # sno = YYYY + month char + DD + desk letter + NN + M1; live site from 2019, Wayback (old site) before
+      streams:
+        - method: wayback_cdx
+          prefix: news.ftv.com.tw/NewsContent.aspx
+          url_pattern: sno=\d{4}[1-9ABC]\d{2}P\d+M1
+          last: 2018-12
+          political_url: sno=\d{4}[1-9ABC]\d{2}P  # P desk is politics; old pages carry no section label
+        - method: date_seq
+          template: https://www.ftvnews.com.tw/news/detail/{y}{mc}{dd:02d}P{seq:02d}M1
+          seq_max: 20
+          first: 2019-01
+          political_section: [政治]
+          political_text: true
+  ebc:
+    name: 東森
+    sitemap: https://news.ebc.net.tw/sitemap/realtime.xml
+    youtube: UCR3asjvr_WAaxwJYEDV_Bfw
+    history:  # current IDs from 2018-02; /news/politics/<id> only resolves for political articles
+      method: id_range
+      template: https://news.ebc.net.tw/news/politics/{id}
+      first: 2018-03
+      anchors: [[2018-02-20, 100003], [2020-03-06, 200041], [2024-01-09, 400000], [2026-11-02, 578592]]
+      political_final_url: ebc\.net\.tw/news/politics/\d+
+      redirect_means_other: true
+  pts:
+    name: 公視
+    sitemap: https://news.pts.org.tw/xml/sitemap.xml
+    youtube: UCexpzYDEnfmAvPSfG4xbcjA
+    history:  # global IDs from 2012-01; section labels on old articles are often missing, so keywords too
+      method: id_range
+      template: https://news.pts.org.tw/article/{id}
+      anchors: [[2012-01-05, 200000], [2013-09-12, 250000], [2016-03-29, 320000], [2016-07-26, 330000], [2018-07-17, 400000], [2019-12-24, 460000], [2022-09-15, 600000], [2026-11-01, 833765]]
+      political_section: [政治]
+      political_text: true
+  storm:
+    name: 風傳媒
+    sitemap: https://www.storm.mg/sitemaps/1/sitemap.xml
+    body_selector: '#editorWrapper'  # page appends related-article teasers
+    youtube: UCwWXGnvVmi-6Sfx2wf8S8tQ
+    history:  # monthly sitemaps from 2013-08 (parts 1..N); politics is breadcrumb /channel/7
+      method: sitemap_month
+      template: https://www.storm.mg/sitemaps/1/article-{y}-{m}-{n}.xml
+      index: https://www.storm.mg/sitemaps/1/sitemap.xml
+      first: 2014-01
+      url_pattern: /article/\d+
+      political_breadcrumb: /channel/7(\D|$)
+  mirror:
+    name: 鏡週刊
+    sitemap: https://www.mirrormedia.mg/rss/posts-news.xml
+    youtube: UCYkldEK001GxR884OZMFnRw
+    history:  # no URL lists of its own; Wayback CDX. Politics: category slug "political" in __NEXT_DATA__
+      method: wayback_cdx
+      prefix: mirrormedia.mg/story/
+      url_pattern: /story/[^/?#]+/?$
+      first: 2016-01
+      political_html: '"slug":\s*"political"'
+
+# News aggregators (syndicated copies; used to measure distribution, not as outlets).
+aggregators:
+  yahoo:
+    name: Yahoo奇摩新聞
+    sitemap: https://tw.news.yahoo.com/news-sitemap-index.xml
+    body_selector: article  # first <article>; later ones are infinite-scroll stories
+
+# Party official press releases: texts whose partisan direction is known (validation anchors, PLAN.md §5.5).
+# 民眾黨 (tpp.org.tw) is behind a Cloudflare challenge; its anchor comes from Legislative Yuan records instead.
+parties:
+  kmt:
+    name: 中國國民黨
+    sitemap: https://www.kmt.org.tw/sitemap.xml
+  dpp:
+    name: 民主進步黨
+    sitemap: https://www.dpp.org.tw/sitemap.xml
+    url_pattern: '/media/contents/\d+$'  # 新聞稿 only
+    id_url: https://www.dpp.org.tw/media/contents/{}  # sequential IDs, used by `twmedia backfill`
+
+# Threads (official API). Keywords are searched hourly (search_type=RECENT); quota 2,200 queries / 24h.
+# profiles: outlets' public Threads accounts (exact usernames, to be verified before adding).
+threads:
+  keywords: [國民黨, 民進黨, 民眾黨, 賴清德, 鄭麗文, 黃國昌, 立法院, 九合一, 罷免, 台北市長]
+  profiles: []
+  public_accounts: []
+
+# LINE TODAY tabs: hourly first-screen snapshots (which outlets get shown, in what order).
+line_today:
+  tabs:
+    - top
+    - domestic
+    # TOPIC-Election2026 loads everything client-side; nothing in the server-rendered page
+
+# PTT boards. Gossiping needs the standard over-18 confirmation cookie.
+# robots.txt Content-Signal: search=yes, ai-train=no -> never use PTT text to train models.
+ptt:
+  boards:
+    - HatePolitics
+    - Gossiping
+  pages_per_run: 5

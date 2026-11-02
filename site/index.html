@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>台灣媒體政黨傾向</title>
+<meta name="description" content="用公開、可重現的方法，追蹤台灣各家媒體如何呈現國民黨、民進黨、民眾黨。">
+<style>
+  :root {
+    --bg: #fbfaf7; --fg: #1d1d1b; --muted: #6b6a66; --line: #e3e1db; --card: #ffffff;
+    --kmt: #2f5fb3; --dpp: #2f8f4e; --tpp: #2aa6a6; --zero: #b9b6ad;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151514; --fg: #ecebe6; --muted: #a3a19a; --line: #34332f; --card: #1e1e1c;
+      --kmt: #7aa2ec; --dpp: #6cc48a; --tpp: #6fd3d3; --zero: #5b5953;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #151514; --fg: #ecebe6; --muted: #a3a19a; --line: #34332f; --card: #1e1e1c;
+    --kmt: #7aa2ec; --dpp: #6cc48a; --tpp: #6fd3d3; --zero: #5b5953;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+         font: 16px/1.7 "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 28px; line-height: 1.3; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 40px 0 12px; }
+  p { margin: 0 0 12px; }
+  .lede { color: var(--muted); max-width: 46em; }
+  .notice { border: 1px solid var(--line); background: var(--card); padding: 12px 16px; border-radius: 8px; margin: 20px 0; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 14px; color: var(--muted); margin: 8px 0 16px; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px 8px; }
+  .card h3 { font-size: 16px; margin: 0 0 4px; }
+  .card svg { width: 100%; height: auto; display: block; }
+  .axis { font-size: 11px; fill: var(--muted); }
+  .muted { color: var(--muted); font-size: 14px; }
+  a { color: inherit; }
+  ul { padding-left: 20px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>台灣媒體政黨傾向</h1>
+  <p class="lede">用公開、可重現的方法，追蹤 12 家新聞媒體怎麼呈現國民黨、民進黨、民眾黨。每條線是該媒體對該黨的平均呈現（-2 很負面，+2 很正面），色帶是 95% 可信區間。</p>
+
+  <div class="notice" id="status">資料載入中…</div>
+
+  <div class="legend">
+    <span><i style="background:var(--kmt)"></i>國民黨</span>
+    <span><i style="background:var(--dpp)"></i>民進黨</span>
+    <span><i style="background:var(--tpp)"></i>民眾黨</span>
+  </div>
+  <div class="grid" id="grid"></div>
+
+  <h2>怎麼算的</h2>
+  <ul>
+    <li>每篇政治新聞由多個大型語言模型依同一份<a href="https://github.com/f0909172434/tw-media-lean/blob/main/docs/codebook.md">標註規則</a>判斷，模型看不到媒體名稱。</li>
+    <li><strong>沒有使用人工標註。</strong>正確性用自動方法檢查：政黨自己的新聞稿要判對、把文中黨名與人名對調後分數要跟著對調、不同模型要一致。結果見 <a href="https://github.com/f0909172434/tw-media-lean/tree/main/docs">docs/</a>。</li>
+    <li>每家媒體、每個政黨的分數用隨機漫步模型平滑；文章少或模型意見分歧的時期，區間會變寬。</li>
+    <li>網站只公開彙總分數，不公開新聞原文與任何個人資料。程式與方法全部開源。</li>
+  </ul>
+  <p class="muted">程式碼：<a href="https://github.com/f0909172434/tw-media-lean">github.com/f0909172434/tw-media-lean</a>　·　<span id="generated"></span></p>
+</main>
+<script>
+const PARTY = { KMT: "--kmt", DPP: "--dpp", TPP: "--tpp" };
+const W = 300, H = 150, PAD = { l: 26, r: 6, t: 8, b: 20 };
+
+function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+function chart(series, periods) {
+  const x = i => PAD.l + (periods.length < 2 ? (W - PAD.l - PAD.r) / 2 : i * (W - PAD.l - PAD.r) / (periods.length - 1));
+  const y = v => PAD.t + (2 - Math.max(-2, Math.min(2, v))) * (H - PAD.t - PAD.b) / 4;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img">`;
+  for (const v of [-2, -1, 0, 1, 2]) {
+    svg += `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${y(v)}" y2="${y(v)}" stroke="${css(v === 0 ? "--zero" : "--line")}" stroke-width="1"/>`;
+    svg += `<text class="axis" x="${PAD.l - 6}" y="${y(v) + 4}" text-anchor="end">${v > 0 ? "+" + v : v}</text>`;
+  }
+  svg += `<text class="axis" x="${PAD.l}" y="${H - 4}">${periods[0]}</text>`;
+  if (periods.length > 1) svg += `<text class="axis" x="${W - PAD.r}" y="${H - 4}" text-anchor="end">${periods.at(-1)}</text>`;
+  for (const s of series) {
+    const col = css(PARTY[s.party]);
+    const idx = s.points.map(p => periods.indexOf(p.period));
+    const band = s.points.map((p, i) => `${x(idx[i])},${y(p.hi)}`).concat(
+      s.points.map((p, i) => `${x(idx[i])},${y(p.lo)}`).reverse()).join(" ");
+    svg += `<polygon points="${band}" fill="${col}" opacity="0.15"/>`;
+    svg += `<polyline points="${s.points.map((p, i) => `${x(idx[i])},${y(p.mean)}`).join(" ")}" fill="none" stroke="${col}" stroke-width="2"/>`;
+    if (s.points.length === 1) svg += `<circle cx="${x(idx[0])}" cy="${y(s.points[0].mean)}" r="3" fill="${col}"/>`;
+  }
+  return svg + "</svg>";
+}
+
+fetch("data/trends.json").then(r => r.json()).then(d => {
+  const periods = [...new Set(d.series.flatMap(s => s.points.map(p => p.period)))].sort();
+  const byOutlet = {};
+  for (const s of d.series) (byOutlet[s.outlet] ??= []).push(s);
+  const order = Object.keys(byOutlet).sort((a, b) => d.outlets[a].localeCompare(d.outlets[b], "zh-Hant"));
+  document.getElementById("grid").innerHTML = order.map(o => {
+    const n = byOutlet[o].reduce((m, s) => m + s.points.reduce((k, p) => k + p.n, 0), 0);
+    return `<div class="card"><h3>${d.outlets[o]}</h3>${chart(byOutlet[o], periods)}<div class="muted">標註篇次：${n}</div></div>`;
+  }).join("");
+  document.getElementById("status").textContent =
+    `試行版：目前只有 ${periods[0]} 到 ${periods.at(-1)} 的資料、單一或少數模型，數字隨時會變，不能當成結論。完整的 2012–2026 結果預計 2026 年 12 月中上線。`;
+  document.getElementById("generated").textContent = `資料更新：${d.generated}`;
+}).catch(() => { document.getElementById("status").textContent = "資料載入失敗。"; });
+</script>
+</body>
+</html>
