@@ -1,6 +1,7 @@
 """LLM annotation through Vertex AI Gemini batch prediction (PLAN.md §5.3; budget terms in private/gcp.md).
 
-    uv run python scripts/vertex_batch.py build  pilot90|pilot1000
+    uv run python scripts/vertex_batch.py build  pilot90|pilot1000|anchors|swap|history
+    uv run python scripts/vertex_batch.py build  live 2026-10-28 2026-11-08   # election window, by publication date
     uv run python scripts/vertex_batch.py submit pilot90
     uv run python scripts/vertex_batch.py fetch  pilot90      # waits for the job, parses, prints token cost
 
@@ -28,7 +29,7 @@ from pathlib import Path
 import httpx
 import yaml
 
-from twmedia.annotate import CODEBOOK_VERSION, build_prompt, parse, swap_parties
+from twmedia.annotate import CODEBOOK_VERSION, build_prompt, mask_people, parse, swap_parties
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "data" / "vertex"
@@ -116,12 +117,97 @@ def items_pilot1000() -> list[dict]:
     return out
 
 
+def annotated() -> set[str]:
+    """Keys already labelled by any Vertex batch, so a new batch never pays for them twice."""
+    done = set()
+    for f in glob.glob(str(ROOT / "data" / "annotations" / "vertex_*.jsonl")):
+        done |= {json.loads(line)["key"] for line in open(f, encoding="utf-8")}
+    return done
+
+
+def _item(kind: str, r: dict, title: str | None = None, text: str | None = None) -> dict:
+    return {"key": f"{kind}:{r['id']}", "source": r["source"], "title": title if title is not None else r.get("title") or "",
+            "text": text if text is not None else r["text"]}
+
+
+def items_live(first: str, last: str, per_day: int = 15) -> list[dict]:
+    """Election window: up to `per_day` political articles per outlet per publication day."""
+    rng, done = random.Random(f"live-{first}-{last}"), annotated()
+    by_cell: dict[tuple[str, str], list[dict]] = {}
+    for r in load("news_*").values():
+        day = (r.get("published") or "")[:10]
+        if first <= day <= last and f"news:{r['id']}" not in done and POLITICAL.search((r.get("title") or "") + r["text"]):
+            by_cell.setdefault((r["source"], day), []).append(r)
+    out = []
+    for cell in sorted(by_cell):
+        pool = sorted(by_cell[cell], key=lambda r: r["id"])
+        out += [_item("news", r) for r in rng.sample(pool, min(per_day, len(pool)))]
+    return out
+
+
+def items_anchors(per_party: int = 1000) -> list[dict]:
+    """Party press releases spread evenly over the years they exist (known-direction anchors)."""
+    rng, done, out = random.Random(20261103), annotated(), []
+    for party in ("kmt", "dpp"):
+        by_year: dict[str, list[dict]] = {}
+        for r in load(f"party_{party}").values():
+            year = (r.get("published") or "")[:4]
+            if year >= "2012" and f"anchor:{r['id']}" not in done and POLITICAL.search(r["text"]):
+                by_year.setdefault(year, []).append(r)
+        quota = per_party // max(len(by_year), 1)
+        for year in sorted(by_year):
+            pool = sorted(by_year[year], key=lambda r: r["id"])
+            out += [_item("anchor", r) for r in rng.sample(pool, min(quota, len(pool)))]
+    return out
+
+
+def items_swap(n: int = 500) -> list[dict]:
+    """Party-swap test at scale (docs/swap-test.md): names masked, then KMT/DPP labels exchanged."""
+    rng, out = random.Random(20261104), []
+    pool = []
+    for r in sorted(load("news_*").values(), key=lambda r: r["id"]):
+        title, text = mask_people(r.get("title") or "", r["text"][:3000])
+        if "國民黨" in title + text and "民進黨" in title + text:
+            pool.append((r, title, text))
+    for r, title, text in rng.sample(pool, min(n, len(pool))):
+        out.append(_item("masked", r, title, text))
+        out.append(_item("swapped", r, swap_parties(title), swap_parties(text)))
+    return out
+
+
+def items_history(per_cell: int = 12) -> list[dict]:
+    """Historical sample: `per_cell` political articles per outlet per month (scripts/history.sh, vm_sync.sh)."""
+    rng, done = random.Random(20261105), annotated()
+    excluded = no_ai_input()
+    by_cell: dict[tuple[str, str], list[dict]] = {}
+    for f in sorted(glob.glob(str(ROOT / "data" / "raw" / "hist_*" / "*.jsonl"))):
+        source = Path(f).parent.name.removesuffix("_wb")
+        if source in excluded:
+            continue
+        for line in open(f, encoding="utf-8"):
+            r = json.loads(line)
+            month = (r.get("published") or "")[:7] or r.get("month", "")
+            if r.get("political_guess") and r.get("text") and len(r["text"]) > 200 and f"hist:{r.get('id', '')}" not in done:
+                r["source"] = source
+                r["id"] = hashlib.sha1(r["url"].encode()).hexdigest()
+                by_cell.setdefault((source, month), []).append(r)
+    out = []
+    for cell in sorted(by_cell):
+        pool = sorted(by_cell[cell], key=lambda r: r["id"])
+        out += [_item("hist", r) for r in rng.sample(pool, min(per_cell, len(pool)))]
+    return out
+
+
 def prompt_hash(prompt: str) -> str:
     return hashlib.sha256(prompt.encode()).hexdigest()[:20]
 
 
-def build(name: str) -> None:
-    items = {"pilot90": items_pilot90, "pilot1000": items_pilot1000}[name]()
+def build(name: str, *args: str) -> None:
+    makers = {"pilot90": items_pilot90, "pilot1000": items_pilot1000, "anchors": items_anchors,
+              "swap": items_swap, "history": items_history, "live": items_live}
+    items = makers[name](*args)
+    if name == "live":
+        name = f"live_{args[0].replace('-', '')}_{args[1].replace('-', '')}"
     d = OUT / name
     d.mkdir(parents=True, exist_ok=True)
     with open(d / "requests.jsonl", "w", encoding="utf-8") as req, open(d / "items.jsonl", "w", encoding="utf-8") as idx:
@@ -209,4 +295,4 @@ def fetch(name: str) -> None:
 
 
 if __name__ == "__main__":
-    {"build": build, "submit": submit, "fetch": fetch}[sys.argv[1]](sys.argv[2])
+    {"build": build, "submit": submit, "fetch": fetch}[sys.argv[1]](*sys.argv[2:])

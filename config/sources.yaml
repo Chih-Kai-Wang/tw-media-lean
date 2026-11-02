@@ -69,7 +69,7 @@ outlets:
       political_text: true  # 2012-2013 has only paper editions, with no politics section
   ettoday:
     name: ETtoday
-    sitemap: https://www.ettoday.net/news-sitemap.xml
+    sitemap: https://www.ettoday.net/sitemap.xml  # news-sitemap.xml stopped updating on 2026-07-21
     youtube: UCl3aKvzB7uC5mTlVEWiCogA
     history:  # global IDs from 2012-01; the date in the URL is corrected by a redirect
       method: id_range
