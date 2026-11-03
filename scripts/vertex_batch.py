@@ -370,7 +370,7 @@ def fetch(name: str) -> None:
     summary = {"set": name, "model": MODEL, "state": state, "requests": len(index), "parsed": ok,
                "tokens_in": tokens_in, "tokens_out": tokens_out, "est_cost_usd": round(cost, 4),
                "usd_per_item": round(cost / max(len(index), 1), 6)}
-    (d / "summary.json").write_text(json.dumps(summary, indent=1))
+    (d / (f"summary_{MODEL}.json" if MODEL in OPENAI_FORMAT else "summary.json")).write_text(json.dumps(summary, indent=1))
     print(json.dumps(summary, indent=1))
 
 
