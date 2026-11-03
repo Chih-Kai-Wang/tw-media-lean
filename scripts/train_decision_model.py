@@ -86,7 +86,8 @@ def load_examples() -> list[dict]:
         for line in open(f, encoding="utf-8"):
             r = json.loads(line)
             if r.get("text"):
-                texts[r["id"]] = ((r.get("title") or "") + "\n" + r["text"], r.get("published") or "")
+                outlet = Path(f).parent.name.split("_", 1)[1].removesuffix("_wb")
+                texts[r["id"]] = ((r.get("title") or "") + "\n" + r["text"], r.get("published") or "", outlet)
     by_article: dict[str, list[dict]] = defaultdict(list)
     # teacher: the primary juror only (the smaller model is weaker on anchors, docs/jury-agreement.md); the OpenCode
     # pilot labels are not used for training
@@ -98,8 +99,22 @@ def load_examples() -> list[dict]:
             kind, aid = d["key"].split(":", 1)
             if kind in ("news", "anchor", "hist") and isinstance(d.get("label"), dict) and "parties" in d["label"]:
                 by_article[aid].append(d["label"])
-    return [{"id": a, "text": texts[a][0], "published": texts[a][1], "y": targets(ls)}
-            for a, ls in by_article.items() if a in texts]
+    return [{"id": a, "text": texts[a][0], "published": texts[a][1], "group": (texts[a][2], period(texts[a][1])),
+             "y": targets(ls)} for a, ls in by_article.items() if a in texts]
+
+
+def period(published: str) -> str:
+    y = published[:4]
+    return "2012-15" if y <= "2015" else "2016-19" if y <= "2019" else "2020-23" if y <= "2023" else "2024-26"
+
+
+def balanced_epoch(train: list[dict], rng: random.Random) -> list[dict]:
+    """Resample so every (outlet, period) group carries about the same weight (v0 was pulled towards the outlets
+    that dominate the labels). Weights are 1/sqrt(group size): flatter than raw counts, without repeating the
+    rarest groups dozens of times."""
+    size = Counter(e["group"] for e in train)
+    weights = [size[e["group"]] ** -0.5 for e in train]
+    return rng.choices(train, weights=weights, k=len(train))
 
 
 class Model(nn.Module):
@@ -113,6 +128,49 @@ class Model(nn.Module):
     def forward(self, **enc):
         cls = self.dropout(self.encoder(**enc).last_hidden_state[:, 0])
         return {h: head(cls) for h, head in self.heads.items()}
+
+
+def stance_class_weights(train: list[dict]) -> dict[str, torch.Tensor]:
+    """Inverse-sqrt class weights for the stance heads, so the majority class (0, neutral) does not absorb the rest."""
+    out = {}
+    for p in PARTIES:
+        c = Counter(e["y"][f"{p}_stance"] for e in train if e["y"][f"{p}_stance"] != IGNORE)
+        w = torch.tensor([(c.get(k, 0) + 1) ** -0.5 for k in range(5)], dtype=torch.float)
+        out[f"{p}_stance"] = w / w.mean()
+    return out
+
+
+def stance_scale(logits: dict, ys: dict, temps: dict) -> dict[str, list[float]]:
+    """Per party, a linear map from the model's expected stance to the teacher's (fitted on validation data)."""
+    out = {}
+    for p in PARTIES:
+        h = f"{p}_stance"
+        keep = ys[h] != IGNORE
+        prob = (logits[h][keep] / temps.get(h, 1.0)).softmax(-1)
+        e = (prob * torch.arange(-2, 3).float()).sum(-1).numpy()
+        t = ys[h][keep].numpy() - 2.0
+        b, a = np.polyfit(e, t, 1) if len(t) > 20 else (1.0, 0.0)
+        out[p] = [float(a), float(b)]
+    return out
+
+
+def shift_and_slope(logits: dict, ys: dict, temps: dict, scale: dict | None) -> dict:
+    """Mean difference to the teacher and slope of model-on-teacher, the two v0 failure measures."""
+    out = {}
+    for p in PARTIES:
+        h = f"{p}_stance"
+        keep = ys[h] != IGNORE
+        if keep.sum() < 20:
+            continue
+        prob = (logits[h][keep] / temps.get(h, 1.0)).softmax(-1)
+        e = (prob * torch.arange(-2, 3).float()).sum(-1).numpy()
+        if scale:
+            a, b = scale[p]
+            e = np.clip(a + b * e, -2, 2)
+        t = ys[h][keep].numpy() - 2.0
+        out[p] = {"n": int(keep.sum()), "mean_diff": round(float(e.mean() - t.mean()), 3),
+                  "slope": round(float(np.polyfit(t, e, 1)[0]), 3), "mae": round(float(np.abs(e - t).mean()), 3)}
+    return out
 
 
 def batches(examples, tok, size, max_len, shuffle):
@@ -177,6 +235,8 @@ def main() -> None:
     ap.add_argument("--max-len", type=int, default=512)
     ap.add_argument("--lr", type=float, default=3e-5)
     ap.add_argument("--name", default=None)
+    ap.add_argument("--balance", action=argparse.BooleanOptionalAction, default=True,
+                    help="balanced (outlet, period) resampling + stance class weights (v1); --no-balance reproduces v0")
     args = ap.parse_args()
     random.seed(0)
     torch.manual_seed(0)
@@ -194,12 +254,17 @@ def main() -> None:
     model = Model(args.base).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
     loss_fn = nn.CrossEntropyLoss(ignore_index=IGNORE)
+    cw = stance_class_weights(train)
+    stance_loss = {h: nn.CrossEntropyLoss(weight=w.to(device), ignore_index=IGNORE) for h, w in cw.items()}
+    rng = random.Random(1)
     for epoch in range(args.epochs):
         model.train()
         total = 0.0
-        for step, (enc, y) in enumerate(batches(train, tok, args.batch, args.max_len, shuffle=True)):
+        epoch_data = balanced_epoch(train, rng) if args.balance else train
+        for step, (enc, y) in enumerate(batches(epoch_data, tok, args.batch, args.max_len, shuffle=True)):
             out = model(**{k: v.to(device) for k, v in enc.items()})
-            losses = [loss_fn(out[h], y[h].to(device)) for h in HEADS if (y[h] != IGNORE).any()]
+            losses = [stance_loss.get(h, loss_fn)(out[h], y[h].to(device)) if args.balance else loss_fn(out[h], y[h].to(device))
+                      for h in HEADS if (y[h] != IGNORE).any()]
             loss = torch.stack(losses).sum()
             opt.zero_grad()
             loss.backward()
@@ -209,9 +274,12 @@ def main() -> None:
 
     val_logits, val_y = predict(model, val, tok, args.batch, args.max_len, device)
     temps = {h: fit_temperature(val_logits[h], val_y[h]) for h in HEADS}
+    scale = stance_scale(val_logits, val_y, temps)
     test_logits, test_y = predict(model, test, tok, args.batch, args.max_len, device)
-    metrics = {"base": args.base, "n": {"train": len(train), "val": len(val), "test": len(test)},
-               "test": evaluate(test_logits, test_y, temps), "temperatures": temps}
+    metrics = {"base": args.base, "balance": args.balance, "n": {"train": len(train), "val": len(val), "test": len(test)},
+               "test": evaluate(test_logits, test_y, temps), "temperatures": temps, "stance_scale": scale,
+               "stance_vs_teacher": {"raw": shift_and_slope(test_logits, test_y, temps, None),
+                                     "scaled": shift_and_slope(test_logits, test_y, temps, scale)}}
     name = args.name or args.base.split("/")[-1]
     out = ROOT / "data" / "models" / name
     out.mkdir(parents=True, exist_ok=True)
@@ -219,9 +287,10 @@ def main() -> None:
     tok.save_pretrained(out / "encoder")
     torch.save(model.heads.state_dict(), out / "heads.pt")
     (out / "config.json").write_text(json.dumps({"heads": HEADS, "genres": GENRES, "topics": TOPICS,
-                                                 "parties": PARTIES, "max_len": args.max_len, "temperatures": temps}, indent=1))
+                                                 "parties": PARTIES, "max_len": args.max_len, "temperatures": temps,
+                                                 "stance_scale": scale}, indent=1))
     (out / "metrics.json").write_text(json.dumps(metrics, indent=1))
-    print(json.dumps(metrics["test"], indent=1)[:1500])
+    print(json.dumps(metrics["stance_vs_teacher"], indent=1))
 
 
 if __name__ == "__main__":

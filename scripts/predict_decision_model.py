@@ -22,12 +22,15 @@ from transformers import AutoTokenizer
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def to_label(probs: dict[str, list[float]]) -> dict:
+def to_label(probs: dict[str, list[float]], scale: dict | None = None) -> dict:
     arg = {h: max(range(len(p)), key=p.__getitem__) for h, p in probs.items()}
     label = {"political": bool(arg["political"]), "genre": GENRES[arg["genre"]], "topic": TOPICS[arg["topic"]], "parties": {}}
     for p in PARTIES:
         mentioned = bool(arg[f"{p}_mentioned"])
         stance = sum((i - 2) * q for i, q in enumerate(probs[f"{p}_stance"]))
+        if scale and p in scale:  # map back onto the teacher's scale (fitted on validation data, v1+)
+            a, b = scale[p]
+            stance = min(2.0, max(-2.0, a + b * stance))
         label["parties"][p] = {"mentioned": mentioned, "stance": round(stance, 3) if mentioned else None,
                                "salience": arg[f"{p}_salience"] if mentioned else 0}
     return label
@@ -64,7 +67,7 @@ def main() -> None:
             probs = {h: (logits[h].float().cpu() / temps.get(h, 1.0)).softmax(-1).tolist() for h in HEADS}
             for j, (key, _) in enumerate(chunk):
                 p = {h: [round(x, 4) for x in probs[h][j]] for h in HEADS}
-                out.write(json.dumps({"key": key, "probs": p, "label": to_label(p), "model": mdir.name}, ensure_ascii=False) + "\n")
+                out.write(json.dumps({"key": key, "probs": p, "label": to_label(p, cfg.get("stance_scale")), "model": mdir.name}, ensure_ascii=False) + "\n")
     print(f"{len(rows)} articles -> {out_path.relative_to(ROOT)}")
 
 
