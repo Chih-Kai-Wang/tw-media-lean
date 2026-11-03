@@ -94,7 +94,7 @@
 - 歷史回溯受各家網站保留期限與 Internet Archive 存檔範圍限制，部分媒體的早期年份樣本較少（見 [docs/collection-status.md](docs/collection-status.md)）
 - 各家「政治新聞」的初篩方式不同（網站分類或關鍵詞），最終由標註重新判定
 - 用語基準法混入「執政 vs 在野」的角色差異，只適合在同一執政期間內比較
-- Facebook、TikTok、Threads 等平台的完整資料需研究合作，目前未納入
+- Facebook、Instagram、Threads 的公開資料只能經 Meta Content Library 取得，須由學術機構的教師擔任主申請人；本研究未取得，因此不納入 Meta 平台。TikTok 的研究 API 只開放美國與歐洲的研究者
 - 政治獻金只有 2018 年起有開放資料，因此獻金相關分析不涵蓋 2016 年政黨輪替；採購、政策宣導與所有權資料仍涵蓋 2012 年起
 
 ## 授權

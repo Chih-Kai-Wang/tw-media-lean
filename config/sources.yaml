@@ -181,6 +181,7 @@ parties:
 # Threads (official API). Keywords are searched hourly (search_type=RECENT); quota 2,200 queries / 24h.
 # profiles: outlets' public Threads accounts (exact usernames, to be verified before adding).
 threads:
+  enabled: false  # standard API access returns only the token owner's posts; public access needs Meta Content Library
   keywords: [國民黨, 民進黨, 民眾黨, 賴清德, 鄭麗文, 黃國昌, 立法院, 九合一, 罷免, 台北市長]
   profiles: []
   public_accounts: []

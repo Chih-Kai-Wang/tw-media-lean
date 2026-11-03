@@ -44,7 +44,7 @@ def build_jobs(cfg: dict, client: PoliteClient, store: Store, max_items: int) ->
         for group, _, cid in groups:
             name = f"yt_{group}_{cid}"
             jobs[name] = lambda k=name, c=cid: youtube.collect(k, c, client, store)
-    if cfg.get("threads"):
+    if cfg.get("threads", {}).get("enabled", True):
         jobs["threads"] = lambda t=cfg["threads"]: threads.collect("threads", t, client, store)
     if cfg.get("line_today"):
         tabs = cfg["line_today"]["tabs"]
