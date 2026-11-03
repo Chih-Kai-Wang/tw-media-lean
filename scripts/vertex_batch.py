@@ -51,7 +51,12 @@ LABELS = {"project": "tw-media-lean"}
 # USD per 1M tokens, batch (50% of online), checked 2026-11-02 on cloud.google.com/vertex-ai/generative-ai/pricing
 PRICE = {"gemini-3.8-flash": (0.4125, 2.0625),  # non-global, introductory price through 2026-12-31
          # batch price not found on 2026-11-03; budgeted at the 3.8 Flash rate as an upper bound
-         "gemini-3.5-flash-lite": (0.4125, 2.0625)}
+         "gemini-3.5-flash-lite": (0.4125, 2.0625),
+         # open models (MaaS), batch price from a search excerpt of the pricing page, 2026-11-03 (not verified)
+         "gpt-oss-120b-maas": (0.045, 0.18),
+         "llama-4-maverick-17b-128e-instruct-maas": (0.175, 0.575)}
+PUBLISHER = {"gpt-oss-120b-maas": "openai", "llama-4-maverick-17b-128e-instruct-maas": "meta"}
+OPENAI_FORMAT = set(PUBLISHER)  # open models take OpenAI chat-completions lines, not Gemini's `request`
 # Gemini 3 takes a thinking level instead of a budget; 3.8 Flash's lowest is LOW
 THINKING = {"gemini-3.8-flash": {"thinkingLevel": "LOW"}}
 POLITICAL = re.compile(r"國民黨|民進黨|民眾黨|藍營|綠營|白營|藍白|黨團|賴清德|鄭麗文|黃國昌|柯文哲")
@@ -122,7 +127,7 @@ def items_pilot1000() -> list[dict]:
 def annotated() -> set[str]:
     """Keys already labelled by any Vertex batch, so a new batch never pays for them twice."""
     done = set()
-    for f in glob.glob(str(ROOT / "data" / "annotations" / "vertex_*.jsonl")):
+    for f in glob.glob(str(ROOT / "data" / "annotations" / "vertex_gemini-3.8-flash_*.jsonl")):  # the primary juror
         done |= {json.loads(line)["key"] for line in open(f, encoding="utf-8")}
     return done
 
@@ -227,9 +232,37 @@ def prompt_hash(prompt: str) -> str:
     return hashlib.sha256(prompt.encode()).hexdigest()[:20]
 
 
+def to_openai(gemini_line: str) -> str:
+    """Rewrite one Gemini batch line as an OpenAI chat-completions line (same prompt, JSON output)."""
+    req = json.loads(gemini_line)["request"]
+    prompt = req["contents"][0]["parts"][0]["text"]
+    return json.dumps({"custom_id": prompt_hash(prompt), "method": "POST", "url": "/v1/chat/completions",
+                       "body": {"model": f"{PUBLISHER.get(MODEL, 'openai')}/{MODEL}",
+                                "messages": [{"role": "user", "content": prompt}], "temperature": 0,
+                                "max_tokens": 4096, "response_format": {"type": "json_object"}}}, ensure_ascii=False)
+
+
+def entry_test(n: int = 300) -> None:
+    """Entry test for a new juror: `n` party press releases (half each party) from the anchor batch."""
+    rng = random.Random(20261107)
+    req = (OUT / "anchors" / "requests.jsonl").read_text(encoding="utf-8").splitlines()
+    idx = (OUT / "anchors" / "items.jsonl").read_text(encoding="utf-8").splitlines()
+    picked = []
+    for party in ("party_kmt", "party_dpp"):
+        pool = [(r, i) for r, i in zip(req, idx) if json.loads(i)["source"] == party]
+        picked += rng.sample(pool, n // 2)
+    d = OUT / "entry"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "requests.jsonl").write_text("".join(r + "\n" for r, _ in picked), encoding="utf-8")
+    (d / "items.jsonl").write_text("".join(i + "\n" for _, i in picked), encoding="utf-8")
+    print(f"{len(picked)} requests -> {d.relative_to(ROOT)}")
+
+
 def build(name: str, *args: str) -> None:
     if name == "juror2":
         return juror2(*map(int, args))
+    if name == "entry":
+        return entry_test(*map(int, args))
     makers = {"pilot90": items_pilot90, "pilot1000": items_pilot1000, "anchors": items_anchors,
               "swap": items_swap, "history": items_history, "live": items_live}
     items = makers[name](*args)
@@ -259,10 +292,15 @@ def submit(name: str) -> None:
         gcloud("storage", "buckets", "update", BUCKET, "--update-labels=project=tw-media-lean")
     stamp = time.strftime("%Y%m%d-%H%M%S")
     src = f"{BUCKET}/{name}/{stamp}/requests.jsonl"
-    gcloud("storage", "cp", str(d / "requests.jsonl"), src)
+    local = d / "requests.jsonl"
+    if MODEL in OPENAI_FORMAT:
+        local = d / f"requests_{MODEL}.jsonl"
+        local.write_text("".join(to_openai(line) + "\n" for line in open(d / "requests.jsonl", encoding="utf-8")),
+                         encoding="utf-8")
+    gcloud("storage", "cp", str(local), src)
     body = {
         "displayName": f"tw-media-lean-{name}-{stamp}",
-        "model": f"publishers/google/models/{MODEL}",
+        "model": f"publishers/{PUBLISHER.get(MODEL, 'google')}/models/{MODEL}",
         "inputConfig": {"instancesFormat": "jsonl", "gcsSource": {"uris": [src]}},
         "outputConfig": {"predictionsFormat": "jsonl", "gcsDestination": {"outputUriPrefix": f"{BUCKET}/{name}/{stamp}/out"}},
         "labels": LABELS,
@@ -271,13 +309,14 @@ def submit(name: str) -> None:
     if r.status_code != 200:
         sys.exit(f"submit failed {r.status_code}: {r.text[:500]}")
     job = r.json()
-    (d / "job.json").write_text(json.dumps({"name": job["name"], "model": MODEL, "input": src}, indent=1))
+    (d / f"job_{MODEL}.json" if MODEL in OPENAI_FORMAT else d / "job.json").write_text(json.dumps({"name": job["name"], "model": MODEL, "input": src}, indent=1))
     print("submitted", job["name"].split("/")[-1], job.get("state"))
 
 
 def fetch(name: str) -> None:
     d = OUT / name
-    job_name = json.loads((d / "job.json").read_text())["name"]
+    job_file = d / f"job_{MODEL}.json" if MODEL in OPENAI_FORMAT else d / "job.json"
+    job_name = json.loads(job_file.read_text())["name"]
     while True:
         job = httpx.get(f"https://{HOST}/v1/{job_name}", headers=headers(), timeout=60).json()
         state = job.get("state")
@@ -288,7 +327,7 @@ def fetch(name: str) -> None:
     if state == "JOB_STATE_FAILED":
         sys.exit(f"job failed: {json.dumps(job.get('error'))[:500]}")
     out_dir = job["outputInfo"]["gcsOutputDirectory"]
-    local = d / "out"
+    local = d / (f"out_{MODEL}" if MODEL in OPENAI_FORMAT else "out")
     local.mkdir(exist_ok=True)
     gcloud("storage", "cp", "-r", f"{out_dir}/*", str(local))
     index = {json.loads(line)["hash"]: json.loads(line) for line in open(d / "items.jsonl", encoding="utf-8")}
@@ -297,17 +336,31 @@ def fetch(name: str) -> None:
     for f in local.rglob("*.jsonl"):
         for line in open(f, encoding="utf-8"):
             row = json.loads(line)
-            it = index.get(prompt_hash(row["request"]["contents"][0]["parts"][0]["text"]))
+            if MODEL in OPENAI_FORMAT:  # chat-completions output: echo of the request, `response` with choices/usage
+                req = row.get("request") or {}
+                body = req.get("body", req)
+                msgs = body.get("messages") or [{}]
+                it = index.get(row.get("custom_id") or "") or index.get(prompt_hash(msgs[0].get("content", "")))
+                resp = row.get("response") or {}
+                resp = resp.get("body", resp)
+                usage = resp.get("usage") or {}
+                tokens_in += usage.get("prompt_tokens", 0)
+                tokens_out += usage.get("completion_tokens", 0)
+                try:
+                    label = parse(resp["choices"][0]["message"]["content"] or "")
+                except (KeyError, IndexError, TypeError):
+                    label = {"error": str(row.get("status") or row.get("error"))[:200]}
+            else:
+                it = index.get(prompt_hash(row["request"]["contents"][0]["parts"][0]["text"]))
+                usage = row.get("response", {}).get("usageMetadata", {})
+                tokens_in += usage.get("promptTokenCount", 0)
+                tokens_out += usage.get("candidatesTokenCount", 0) + usage.get("thoughtsTokenCount", 0)
+                try:
+                    label = parse(row["response"]["candidates"][0]["content"]["parts"][0]["text"])
+                except (KeyError, IndexError):
+                    label = {"error": str(row.get("status"))[:200]}
             if not it:
                 continue
-            usage = row.get("response", {}).get("usageMetadata", {})
-            tokens_in += usage.get("promptTokenCount", 0)
-            tokens_out += usage.get("candidatesTokenCount", 0) + usage.get("thoughtsTokenCount", 0)
-            try:
-                text = row["response"]["candidates"][0]["content"]["parts"][0]["text"]
-                label = parse(text)
-            except (KeyError, IndexError):
-                label = {"error": str(row.get("status"))[:200]}
             ok += bool(label and label.get("parties"))
             labels.append({"key": it["key"], "label": label, "codebook": CODEBOOK_VERSION, "model": MODEL})
     with open(ROOT / "data" / "annotations" / f"vertex_{MODEL}_{name}.jsonl", "w", encoding="utf-8") as f:
