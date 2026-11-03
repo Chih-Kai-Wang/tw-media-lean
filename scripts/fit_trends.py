@@ -59,22 +59,24 @@ def main() -> None:
     args = ap.parse_args()
     kind = args.period
 
-    meta = {}
-    for f in glob.glob(str(ROOT / "data" / "raw" / "news_*" / "*.jsonl")):
+    meta = {}  # article id -> (outlet as news_<key>, publication date); the historical sample counts as the same outlet
+    for f in glob.glob(str(ROOT / "data" / "raw" / "news_*" / "*.jsonl")) + glob.glob(str(ROOT / "data" / "raw" / "hist_*" / "*.jsonl")):
+        outlet = "news_" + Path(f).parent.name.split("_", 1)[1].removesuffix("_wb")
         for line in open(f, encoding="utf-8"):
             r = json.loads(line)
-            meta[r["id"]] = (Path(f).parent.name, r.get("published") or "")
+            if r.get("id"):
+                meta[r["id"]] = (outlet, r.get("published") or "")
 
     votes: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))  # article -> party -> stances
     files = glob.glob(str(ROOT / "data" / "annotations" / "vertex_*.jsonl")) + glob.glob(str(ROOT / "data" / "annotations" / "pilot_*.jsonl"))
     for f in files:
         for line in open(f, encoding="utf-8"):
             d = json.loads(line)
-            if not d["key"].startswith("news:"):
+            if not d["key"].startswith(("news:", "hist:")):
                 continue
             for party, v in ((d.get("label") or {}).get("parties") or {}).items():
                 if party in PARTIES and v and v.get("stance") is not None:
-                    votes[d["key"][5:]][party].append(float(v["stance"]))
+                    votes[d["key"].split(":", 1)[1]][party].append(float(v["stance"]))
 
     cells: dict[tuple[str, str], dict[str, list[list[float]]]] = defaultdict(lambda: defaultdict(list))
     for aid, by_party in votes.items():
@@ -86,6 +88,8 @@ def main() -> None:
         per = period_of(published, kind)
         if per:
             for party, stances in by_party.items():
+                if party == "TPP" and published[:7] < "2019-08":
+                    continue  # 台灣民眾黨 was founded in 2019-08; earlier mentions are other parties or misreadings
                 cells[(source, party)][per].append(stances)
 
     out = {"period": kind, "generated": date.today().isoformat(), "files": [Path(f).name for f in files], "series": []}
