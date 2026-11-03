@@ -54,7 +54,8 @@ def main() -> None:
             r = json.loads(line)
             if r.get("text"):
                 rows.append((f"{Path(f).parent.name}:{r['id']}", (r.get("title") or "") + "\n" + r["text"]))
-    out_path = ROOT / "data" / "annotations" / f"model_{mdir.name}.jsonl"
+    tag = args.sources.replace("*", "").strip("_") or "all"
+    out_path = ROOT / "data" / "annotations" / f"model_{mdir.name}_{tag}.jsonl"
     with open(out_path, "w", encoding="utf-8") as out, torch.no_grad():
         for i in range(0, len(rows), args.batch):
             chunk = rows[i : i + args.batch]
