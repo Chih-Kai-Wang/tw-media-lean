@@ -56,6 +56,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--period", choices=["month", "week", "day"], default="month")
     ap.add_argument("--since", default="", help="only articles published on or after this date (YYYY-MM-DD)")
+    ap.add_argument("--labels", choices=["llm", "model"], default="llm",
+                    help="llm: Vertex/pilot jurors; model: the trained decision model (all sampled articles)")
     args = ap.parse_args()
     kind = args.period
 
@@ -68,8 +70,22 @@ def main() -> None:
                 meta[r["id"]] = (outlet, r.get("published") or "")
 
     votes: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))  # article -> party -> stances
-    files = glob.glob(str(ROOT / "data" / "annotations" / "vertex_*.jsonl")) + glob.glob(str(ROOT / "data" / "annotations" / "pilot_*.jsonl"))
-    for f in files:
+    if args.labels == "model":
+        files = glob.glob(str(ROOT / "data" / "annotations" / "model_*.jsonl"))
+        for f in files:
+            for line in open(f, encoding="utf-8"):
+                d = json.loads(line)
+                src, aid = d["key"].split(":", 1)
+                if not src.startswith(("news_", "hist_")) or d["probs"]["political"][1] < 0.5:
+                    continue
+                for party in PARTIES:
+                    v = d["label"]["parties"][party]
+                    if v["mentioned"] and v["stance"] is not None:
+                        votes[aid][party].append(float(v["stance"]))
+        files = files
+    files = files if args.labels == "model" else (
+        glob.glob(str(ROOT / "data" / "annotations" / "vertex_*.jsonl")) + glob.glob(str(ROOT / "data" / "annotations" / "pilot_*.jsonl")))
+    for f in ([] if args.labels == "model" else files):
         for line in open(f, encoding="utf-8"):
             d = json.loads(line)
             if not d["key"].startswith(("news:", "hist:")):
@@ -102,7 +118,7 @@ def main() -> None:
                         "lo": round(float(lo), 3), "hi": round(float(hi), 3)}
                        for p, m, lo, hi in zip(pers, fit["mean"], fit["lo"], fit["hi"])],
         })
-    path = ROOT / "data" / "derived" / f"trends_{kind}.json"
+    path = ROOT / "data" / "derived" / f"trends_{kind}{'_model' if args.labels == 'model' else ''}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"{len(out['series'])} series, {len(votes)} annotated articles -> {path.relative_to(ROOT)}")
