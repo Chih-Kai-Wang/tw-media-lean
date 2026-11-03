@@ -69,8 +69,11 @@ def _month_start(month: str) -> date:
 
 def interpolate_ids(anchors: list[list], month: str) -> tuple[int, int]:
     """[first, next-month-first) ID range for a month from known (date, id) anchors ("YYYY-MM" means the 1st)."""
-    pts = sorted(((date.fromisoformat(str(d)) if len(str(d)) == 10 else _month_start(str(d))).toordinal(), int(i))
-                 for d, i in anchors)  # YAML turns 2012-01-09 into a date object, hence str()
+    by_day: dict[int, int] = {}  # one anchor per day (a calibrated anchor can share a day with a configured one)
+    for d, i in anchors:  # YAML turns 2012-01-09 into a date object, hence str()
+        x = (date.fromisoformat(str(d)) if len(str(d)) == 10 else _month_start(str(d))).toordinal()
+        by_day[x] = max(by_day.get(x, 0), int(i))
+    pts = sorted(by_day.items())
     best = 0
     for k, (x, i) in enumerate(pts):  # IDs only grow with time: smooth out late-published or back-dated pages
         best = max(best, i)
