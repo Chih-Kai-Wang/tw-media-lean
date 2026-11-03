@@ -57,6 +57,9 @@ PRICE = {"gemini-3.8-flash": (0.4125, 2.0625),  # non-global, introductory price
          "llama-4-maverick-17b-128e-instruct-maas": (0.175, 0.575)}
 PUBLISHER = {"gpt-oss-120b-maas": "openai", "llama-4-maverick-17b-128e-instruct-maas": "meta"}
 OPENAI_FORMAT = set(PUBLISHER)  # open models take OpenAI chat-completions lines, not Gemini's `request`
+# gpt-oss degenerates under response_format=json_object (probe, 2026-11-03), so it relies on the prompt alone
+OPEN_OPTIONS = {"gpt-oss-120b-maas": {"reasoning_effort": "low"},
+                "llama-4-maverick-17b-128e-instruct-maas": {"response_format": {"type": "json_object"}}}
 # Gemini 3 takes a thinking level instead of a budget; 3.8 Flash's lowest is LOW
 THINKING = {"gemini-3.8-flash": {"thinkingLevel": "LOW"}}
 POLITICAL = re.compile(r"國民黨|民進黨|民眾黨|藍營|綠營|白營|藍白|黨團|賴清德|鄭麗文|黃國昌|柯文哲")
@@ -239,7 +242,7 @@ def to_openai(gemini_line: str) -> str:
     return json.dumps({"custom_id": prompt_hash(prompt), "method": "POST", "url": "/v1/chat/completions",
                        "body": {"model": f"{PUBLISHER.get(MODEL, 'openai')}/{MODEL}",
                                 "messages": [{"role": "user", "content": prompt}], "temperature": 0,
-                                "max_tokens": 4096, "response_format": {"type": "json_object"}}}, ensure_ascii=False)
+                                "max_tokens": 4096, **OPEN_OPTIONS.get(MODEL, {})}}, ensure_ascii=False)
 
 
 def entry_test(n: int = 300) -> None:

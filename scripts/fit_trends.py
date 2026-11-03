@@ -58,6 +58,7 @@ def main() -> None:
     ap.add_argument("--since", default="", help="only articles published on or after this date (YYYY-MM-DD)")
     ap.add_argument("--labels", choices=["llm", "model"], default="llm",
                     help="llm: Vertex/pilot jurors; model: the trained decision model (all sampled articles)")
+    ap.add_argument("--model", default="tw-media-lean-v1", help="decision model name, with --labels model")
     args = ap.parse_args()
     kind = args.period
 
@@ -71,18 +72,17 @@ def main() -> None:
 
     votes: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))  # article -> party -> stances
     if args.labels == "model":
-        files = glob.glob(str(ROOT / "data" / "annotations" / "model_*.jsonl"))
+        files = glob.glob(str(ROOT / "data" / "annotations" / f"model_{args.model}_*.jsonl"))
         for f in files:
             for line in open(f, encoding="utf-8"):
                 d = json.loads(line)
                 src, aid = d["key"].split(":", 1)
                 if not src.startswith(("news_", "hist_")) or d["probs"]["political"][1] < 0.5:
                     continue
-                for party in PARTIES:
+                for party in ("KMT", "DPP"):  # the model's TPP stance is not calibrated (docs/decision-model.md)
                     v = d["label"]["parties"][party]
                     if v["mentioned"] and v["stance"] is not None:
                         votes[aid][party].append(float(v["stance"]))
-        files = files
     files = files if args.labels == "model" else (
         glob.glob(str(ROOT / "data" / "annotations" / "vertex_*.jsonl")) + glob.glob(str(ROOT / "data" / "annotations" / "pilot_*.jsonl")))
     for f in ([] if args.labels == "model" else files):
