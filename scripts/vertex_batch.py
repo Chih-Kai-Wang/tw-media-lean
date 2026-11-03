@@ -49,7 +49,9 @@ BUCKET = _env("TWM_GCS_BUCKET")
 MODEL = os.environ.get("TWM_VERTEX_MODEL", "gemini-3.8-flash")
 LABELS = {"project": "tw-media-lean"}
 # USD per 1M tokens, batch (50% of online), checked 2026-11-02 on cloud.google.com/vertex-ai/generative-ai/pricing
-PRICE = {"gemini-3.8-flash": (0.4125, 2.0625)}  # non-global, introductory price through 2026-12-31
+PRICE = {"gemini-3.8-flash": (0.4125, 2.0625),  # non-global, introductory price through 2026-12-31
+         # batch price not found on 2026-11-03; budgeted at the 3.8 Flash rate as an upper bound
+         "gemini-3.5-flash-lite": (0.4125, 2.0625)}
 # Gemini 3 takes a thinking level instead of a budget; 3.8 Flash's lowest is LOW
 THINKING = {"gemini-3.8-flash": {"thinkingLevel": "LOW"}}
 POLITICAL = re.compile(r"國民黨|民進黨|民眾黨|藍營|綠營|白營|藍白|黨團|賴清德|鄭麗文|黃國昌|柯文哲")
@@ -198,11 +200,36 @@ def items_history(per_cell: int = 12) -> list[dict]:
     return out
 
 
+def juror2(n: int = 3000) -> None:
+    """Second juror: resend exact requests already labelled by the first model (same prompts), for agreement.
+
+    Samples evenly from the election-window, historical and anchor batches, and writes data/vertex/juror2/."""
+    rng = random.Random(20261106)
+    pools = {}
+    for name in sorted(p.name for p in OUT.iterdir() if p.is_dir() and (p.name.startswith("live_") or p.name in ("history", "anchors"))):
+        req = (OUT / name / "requests.jsonl").read_text(encoding="utf-8").splitlines()
+        idx = (OUT / name / "items.jsonl").read_text(encoding="utf-8").splitlines()
+        pools[name] = list(zip(req, idx))
+    share = {"history": 0.6, "anchors": 0.15}
+    live = [k for k in pools if k.startswith("live_")]
+    picked = []
+    for name, pool in pools.items():
+        k = round(n * share.get(name, 0.25 / max(len(live), 1)))
+        picked += rng.sample(pool, min(k, len(pool)))
+    d = OUT / "juror2"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "requests.jsonl").write_text("".join(r + "\n" for r, _ in picked), encoding="utf-8")
+    (d / "items.jsonl").write_text("".join(i + "\n" for _, i in picked), encoding="utf-8")
+    print(f"{len(picked)} requests -> {d.relative_to(ROOT)}")
+
+
 def prompt_hash(prompt: str) -> str:
     return hashlib.sha256(prompt.encode()).hexdigest()[:20]
 
 
 def build(name: str, *args: str) -> None:
+    if name == "juror2":
+        return juror2(*map(int, args))
     makers = {"pilot90": items_pilot90, "pilot1000": items_pilot1000, "anchors": items_anchors,
               "swap": items_swap, "history": items_history, "live": items_live}
     items = makers[name](*args)
