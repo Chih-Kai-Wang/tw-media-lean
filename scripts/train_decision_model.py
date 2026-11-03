@@ -36,6 +36,7 @@ TOPICS = ("election", "cross_strait", "foreign_defense", "economy", "energy_envi
 HEADS = {"political": 2, "genre": len(GENRES), "topic": len(TOPICS)} | {
     f"{p}_{q}": n for p in PARTIES for q, n in (("mentioned", 2), ("stance", 5), ("salience", 4))}
 IGNORE = -100
+TEACHER = "gemini-3.8-flash"
 
 
 def majority(values: list):
@@ -80,20 +81,22 @@ def load_examples() -> list[dict]:
     files = glob.glob(str(ROOT / "data" / "raw" / "news_*" / "*.jsonl")) + glob.glob(str(ROOT / "data" / "raw" / "hist_*" / "*.jsonl")) \
         + glob.glob(str(ROOT / "data" / "raw" / "party_*" / "*.jsonl"))
     for f in files:
-        if Path(f).parent.name in excluded:
+        if Path(f).parent.name.removesuffix("_wb") in excluded:
             continue
         for line in open(f, encoding="utf-8"):
             r = json.loads(line)
             if r.get("text"):
                 texts[r["id"]] = ((r.get("title") or "") + "\n" + r["text"], r.get("published") or "")
     by_article: dict[str, list[dict]] = defaultdict(list)
-    for f in glob.glob(str(ROOT / "data" / "annotations" / "*.jsonl")):
-        if Path(f).name.startswith("swap_"):
+    # teacher: the primary juror only (the smaller model is weaker on anchors, docs/jury-agreement.md); the OpenCode
+    # pilot labels are not used for training
+    for f in glob.glob(str(ROOT / "data" / "annotations" / f"vertex_{TEACHER}_*.jsonl")):
+        if Path(f).stem.endswith("_swap"):
             continue  # masked/swapped texts are tests, not training data
         for line in open(f, encoding="utf-8"):
             d = json.loads(line)
             kind, aid = d["key"].split(":", 1)
-            if kind in ("news", "anchor") and isinstance(d.get("label"), dict) and "parties" in d["label"]:
+            if kind in ("news", "anchor", "hist") and isinstance(d.get("label"), dict) and "parties" in d["label"]:
                 by_article[aid].append(d["label"])
     return [{"id": a, "text": texts[a][0], "published": texts[a][1], "y": targets(ls)}
             for a, ls in by_article.items() if a in texts]
@@ -177,7 +180,7 @@ def main() -> None:
     args = ap.parse_args()
     random.seed(0)
     torch.manual_seed(0)
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
     examples = load_examples()
     # split by article id hash so the split is stable as more labels arrive

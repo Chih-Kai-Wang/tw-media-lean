@@ -41,7 +41,7 @@ def main() -> None:
     args = ap.parse_args()
     mdir = Path(args.model)
     cfg = json.loads((mdir / "config.json").read_text())
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
     tok = AutoTokenizer.from_pretrained(mdir / "encoder")
     model = Model(str(mdir / "encoder"))
     model.heads.load_state_dict(torch.load(mdir / "heads.pt", map_location="cpu"))
