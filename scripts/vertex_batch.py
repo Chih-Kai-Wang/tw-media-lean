@@ -44,9 +44,12 @@ def _env(key: str, default: str = "") -> str:
 
 
 PROJECT, GCLOUD_CONFIG = _env("TWM_GCP_PROJECT"), _env("TWM_GCLOUD_CONFIG", "default")
-LOCATION = os.environ.get("TWM_VERTEX_LOCATION", "us")  # multi-region; amendment 2026-11-02, see private/gcp.md
-BUCKET = _env("TWM_GCS_BUCKET")
 MODEL = os.environ.get("TWM_VERTEX_MODEL", "gemini-3.8-flash")
+# Gemini: the us multi-region (amendment 2026-11-02, see private/gcp.md). Open models are served only in some
+# single regions: Llama 4 answers 404 in us-central1 and global, but works in us-east5 (checked 2026-11-06).
+MODEL_LOCATION = {"gpt-oss-120b-maas": "us-central1", "llama-4-maverick-17b-128e-instruct-maas": "us-east5"}
+LOCATION = os.environ.get("TWM_VERTEX_LOCATION", MODEL_LOCATION.get(MODEL, "us"))
+BUCKET = _env("TWM_GCS_BUCKET")
 LABELS = {"project": "tw-media-lean"}
 # USD per 1M tokens, batch, as actually billed (Billing report by SKU, 2026-11-06; TWD converted at the rate implied
 # by gpt-oss, whose listed price matches its bill). The 3.8 Flash list price read on 2026-11-02 was half of this.
