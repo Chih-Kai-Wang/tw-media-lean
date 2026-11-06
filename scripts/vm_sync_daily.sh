@@ -3,6 +3,8 @@
 # missed while offline or asleep is retried the next hour, while network egress from the VM stays at one copy a day.
 cd "$(dirname "$0")/.."
 export PATH="$HOME/google-cloud-sdk/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+# launchd's PATH would give gcloud the system Python 3.9, which it no longer supports
+[ -z "$CLOUDSDK_PYTHON" ] && [ -x "$HOME/miniconda3/bin/python3" ] && export CLOUDSDK_PYTHON="$HOME/miniconda3/bin/python3"
 STAMP=data/logs/vm_sync.last
 mkdir -p data/logs
 if [ -f "$STAMP" ] && [ $(( $(date +%s) - $(cat "$STAMP") )) -lt 72000 ]; then exit 0; fi  # synced in the last 20 h

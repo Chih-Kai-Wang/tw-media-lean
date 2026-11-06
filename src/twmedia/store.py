@@ -31,6 +31,8 @@ class Store:
         self.root = root
         (root / "raw").mkdir(parents=True, exist_ok=True)
         self._db = sqlite3.connect(root / "state.sqlite", check_same_thread=False, timeout=30)
+        # WAL: readers (scripts/vm_sync.sh's backup) are not blocked by the per-outlet writer threads
+        self._db.execute("PRAGMA journal_mode=WAL")
         self._db.execute(
             "CREATE TABLE IF NOT EXISTS seen ("
             " source TEXT, item_id TEXT, first_seen TEXT,"

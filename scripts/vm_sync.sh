@@ -15,7 +15,8 @@ TMP=$(mktemp -d)
 LOCAL="'hist_ltn'"
 
 $G compute ssh $VM --command='cd tw-media-lean && rm -f /tmp/hist.tgz /tmp/hist.sqlite &&
-  sqlite3 -cmd ".timeout 60000" data/state.sqlite ".backup /tmp/hist.sqlite" &&
+  for i in 1 2 3 4 5; do sqlite3 -cmd ".timeout 60000" data/state.sqlite ".backup /tmp/hist.sqlite" && break; sleep 30; done &&
+  [ -s /tmp/hist.sqlite ] &&
   tar -czf /tmp/hist.tgz data/raw/hist_* data/cache /tmp/hist.sqlite 2>/dev/null; ls -la /tmp/hist.tgz'
 $G compute scp "$TWM_VM_NAME:/tmp/hist.tgz" "$TMP/" --zone="$TWM_VM_ZONE" --project="$TWM_GCP_PROJECT" --quiet
 tar -xzf "$TMP/hist.tgz" -C "$TMP"
