@@ -48,12 +48,12 @@ LOCATION = os.environ.get("TWM_VERTEX_LOCATION", "us")  # multi-region; amendmen
 BUCKET = _env("TWM_GCS_BUCKET")
 MODEL = os.environ.get("TWM_VERTEX_MODEL", "gemini-3.8-flash")
 LABELS = {"project": "tw-media-lean"}
-# USD per 1M tokens, batch (50% of online), checked 2026-11-02 on cloud.google.com/vertex-ai/generative-ai/pricing
-PRICE = {"gemini-3.8-flash": (0.4125, 2.0625),  # non-global, introductory price through 2026-12-31
-         # batch price not found on 2026-11-03; budgeted at the 3.8 Flash rate as an upper bound
-         "gemini-3.5-flash-lite": (0.4125, 2.0625),
-         # open models (MaaS), batch price from a search excerpt of the pricing page, 2026-11-03 (not verified)
+# USD per 1M tokens, batch, as actually billed (Billing report by SKU, 2026-11-06; TWD converted at the rate implied
+# by gpt-oss, whose listed price matches its bill). The 3.8 Flash list price read on 2026-11-02 was half of this.
+PRICE = {"gemini-3.8-flash": (0.825, 4.125),
+         "gemini-3.5-flash-lite": (0.165, 1.375),
          "gpt-oss-120b-maas": (0.045, 0.18),
+         # not billed yet; batch price from a search excerpt of the pricing page, 2026-11-03 (not verified)
          "llama-4-maverick-17b-128e-instruct-maas": (0.175, 0.575)}
 PUBLISHER = {"gpt-oss-120b-maas": "openai", "llama-4-maverick-17b-128e-instruct-maas": "meta"}
 OPENAI_FORMAT = set(PUBLISHER)  # open models take OpenAI chat-completions lines, not Gemini's `request`
