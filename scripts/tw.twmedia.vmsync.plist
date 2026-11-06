@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Daily pull of the cloud VM's historical backfill (scripts/vm_sync_daily.sh checks hourly, syncs once a day). Install:
+    sed "s|/Users/wangzhikai/台灣媒體政黨傾向分析|$PWD|" scripts/tw.twmedia.vmsync.plist > ~/Library/LaunchAgents/tw.twmedia.vmsync.plist
+    launchctl load ~/Library/LaunchAgents/tw.twmedia.vmsync.plist
+  Remove it when the VM is deleted.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>tw.twmedia.vmsync</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>/Users/wangzhikai/台灣媒體政黨傾向分析/scripts/vm_sync_daily.sh</string>
+  </array>
+  <key>StartInterval</key>
+  <integer>3600</integer>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StandardErrorPath</key>
+  <string>/tmp/tw.twmedia.vmsync.err</string>
+</dict>
+</plist>
