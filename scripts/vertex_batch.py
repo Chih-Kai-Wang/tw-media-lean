@@ -321,7 +321,12 @@ def fetch(name: str) -> None:
     job_file = d / f"job_{MODEL}.json" if MODEL in OPENAI_FORMAT else d / "job.json"
     job_name = json.loads(job_file.read_text())["name"]
     while True:
-        job = httpx.get(f"https://{HOST}/v1/{job_name}", headers=headers(), timeout=60).json()
+        try:
+            job = httpx.get(f"https://{HOST}/v1/{job_name}", headers=headers(), timeout=60).json()
+        except (httpx.TransportError, subprocess.CalledProcessError) as e:  # offline (e.g. commuting): wait and poll again
+            print(time.strftime("%H:%M"), "offline:", type(e).__name__, flush=True)
+            time.sleep(120)
+            continue
         state = job.get("state")
         if state in ("JOB_STATE_SUCCEEDED", "JOB_STATE_FAILED", "JOB_STATE_CANCELLED", "JOB_STATE_PARTIALLY_SUCCEEDED"):
             break
