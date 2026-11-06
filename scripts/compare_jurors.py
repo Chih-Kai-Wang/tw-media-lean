@@ -3,7 +3,8 @@ party-swap test (build swap).
 
 Writes docs/jury-agreement.md: Krippendorff's alpha (ordinal) per party for all jurors and for each juror against
 the primary one, anchor accuracy, the outlet ranking each juror implies, and the swap-test label effect.
-Usage: uv run python scripts/compare_jurors.py gemini-3.8-flash gemini-3.5-flash-lite gpt-oss-120b-maas
+Usage: uv run python scripts/compare_jurors.py gemini-3.8-flash gemini-3.5-flash-lite gpt-oss-120b-maas \
+    llama-4-maverick-17b-128e-instruct-maas
 (the first model is the primary juror)
 """
 
@@ -104,11 +105,15 @@ def main(models: list[str]) -> None:
     rhos = [np.corrcoef(rank([gap[primary][s] for s in common]), rank([gap[m][s] for s in common]))[0, 1] for m in models]
     L.append("| ρ（vs 主要） | " + " | ".join(f"{r:.2f}" for r in rhos) + " |")
     L += ["\n## 判讀\n",
-          "- **媒體之間的相對位置在不同公司的模型之間都一致**：非 Google 的 gpt-oss 與 Gemini 的排名相關仍有 0.96，"
-          "最偏民進黨（民視、三立）與最偏國民黨（中國時報、聯合報）的兩端完全相同。所以媒體排序不是 Google 模型特有的結果",
+          "- **媒體之間的相對位置在不同公司的模型之間都一致**：非 Google 的 gpt-oss（OpenAI）與 Llama 4（Meta）"
+          "和 Gemini 的排名相關分別是 0.96 與 0.98，最偏民進黨（民視、三立）與最偏國民黨（中國時報、聯合報）的兩端完全相同。"
+          "所以媒體排序不是單一公司模型特有的結果",
           "- **逐篇判斷的一致性中等**（α 約 0.6–0.75）：個別文章的判斷會因模型而異，結論應建立在大量文章的平均上，並保留陪審團的分歧作為不確定性",
-          "- **偏誤方向不同**：主要陪審員有很小的國民黨標籤效應，gpt-oss 沒有可測得的標籤效應；兩者平均後偏誤會變小",
-          "- **個別媒體仍有差異**：例如自由時報在 Gemini 是明顯偏民進黨（−0.53），在 gpt-oss 接近中間（−0.06）；這類差異會在報告中逐家列出",
+          "- **標籤效應小，且不是 Google 特有**：Gemini 與 Llama 4 都有很小的國民黨標籤效應（約 −0.06），gpt-oss 沒有可測得的效應；"
+          "遠小於媒體之間的差距（兩端相差約 1.4），報告會一併揭露",
+          "- **個別媒體仍有差異**：自由時報在 Gemini 偏民進黨（−0.50），在 gpt-oss 與 Llama 4 較接近中間（−0.06、−0.16）；"
+          "公視則是 Gemini 接近中間（+0.02），gpt-oss 與 Llama 4 偏民進黨（−0.27、−0.44）。這類差異會在報告中逐家列出",
+          "- **入選測試**：Llama 4 在另外 300 篇政黨新聞稿上判對自己黨為正面的比例是 93%（gpt-oss 88%、Gemini 92%），與主要陪審員相當",
           "- 較小的 gemini-3.5-flash-lite 判對已知立場的比例較低（78%），只用於檢驗排序，不列入正式陪審團；中國公司的模型因 Vertex 上已退役，這一版未納入"]
     (ROOT / "docs" / "jury-agreement.md").write_text("\n".join(L) + "\n", encoding="utf-8")
     print("\n".join(L))
