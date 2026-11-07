@@ -29,3 +29,18 @@ def test_jump_at_known_event_is_followed_quickly():
     jump[24] = 400.0  # e.g. a change of ownership announced for that month
     fit = smooth(_periods(truth, np.full(48, 80), rng), jump=jump)
     assert abs(fit["mean"][24] - 0.6) < 0.25 and abs(fit["mean"][23] + 0.6) < 0.25
+
+
+def test_events_config_aligns_to_periods():
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    from fit_trends import load_events
+
+    mult, ev = load_events("month")
+    assert mult > 1
+    assert [e["period"] for e in ev["*"]] == ["2016-05"]  # the only KMT<->DPP turnover in range
+    assert "2015-01" in [e["period"] for e in ev["news_tvbs"]]  # month-only dates fall in their month
+    assert all(o == "*" or o.startswith("news_") for o in ev)
+    assert load_events("week")[1]["*"][0]["period"] == "2016-W20"

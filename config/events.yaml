@@ -1,0 +1,50 @@
+# Known events at which the trend model (src/twmedia/trend.py, scripts/fit_trends.py) lets an outlet's position
+# move faster: the random-walk variance of the period containing the event is multiplied by `jump`. This widens
+# what the model allows; it does not push the series in any direction.
+#
+# Selection rule (applied to docs/money-sources.md §5.2; nothing else is added by hand):
+#   - government turnover between KMT and DPP inside 2012-2026 (only 2016-05-20; 2024 was the same party): all outlets
+#   - a change of who controls an outlet in the analysis set: acquisition completed, controller sold out or died
+#   - a chair change, only at outlets without a single controlling owner (公視, 中央社, 民視, 三立), where the
+#     chair is the closest thing to a controller
+#   Not included: rows marked 背景 or 脈絡, failed or rejected acquisitions, licensing, court rulings and fines,
+#   disputes, board seats, foundings (a series simply starts), and entities outside the analysis set
+#   (中天, 中視, 壹電視, 鏡電視, 中嘉).
+#
+# The fit without events is kept (fit_trends.py --no-events); Method F's event studies read that one, so a shift
+# found there was not made possible by this file (docs/trend-model.md).
+
+jump: 25   # variance multiplier, i.e. the step sd may be 5x the usual month-to-month sd
+
+events:
+  - {date: 2016-05-20, outlets: all, kind: 政黨輪替, note: 民進黨蔡英文政府就職,
+     source: "https://zh.wikipedia.org/wiki/2016年中華民國總統選舉"}
+
+  - {date: 2013-06-25, outlets: [pts], kind: 董事長變更, note: 第五屆董事會成立，邵玉銘任董事長,
+     source: "https://newtalk.tw/news/view/2013-08-23/39490"}
+  - {date: 2015-01, outlets: [tvbs], kind: 控制者變更, note: TVB 將 53% 股權售予 3 家台灣投資公司,
+     source: "https://www.taipeitimes.com/News/taiwan/archives/2016/01/05/2003636483"}
+  - {date: 2015-11-28, outlets: [ltn], kind: 控制者過世, note: 創辦人林榮三過世,
+     source: "https://news.pts.org.tw/article/311532"}
+  - {date: 2016-01-04, outlets: [tvbs], kind: 出售, note: TVB 售出其餘 47% 完全退出,
+     source: "https://www.taipeitimes.com/News/taiwan/archives/2016/01/05/2003636483"}
+  - {date: 2016-05-26, outlets: [ftv], kind: 董事長變更, note: 郭倍宏接替田再庭,
+     source: "https://ent.ltn.com.tw/news/breakingnews/1711309"}
+  - {date: 2016-09-26, outlets: [pts], kind: 董事長變更, note: 陳郁秀當選第六屆董事長,
+     source: "https://news.pts.org.tw/article/335965"}
+  - {date: 2018-01-31, outlets: [ebc], kind: 控制者變更, note: NCC 同意茂德國際收購東森電視,
+     source: "https://www.cna.com.tw/news/ahel/201801310224.aspx"}
+  - {date: 2019-03-14, outlets: [ftv], kind: 董事長變更, note: 郭倍宏遭撤換，黃明展接任,
+     source: "https://www.mirrormedia.mg/story/20190315fin001"}
+  - {date: 2019-04-02, outlets: [ftv], kind: 董事長變更, note: 王明玉當選董事長,
+     source: "https://newtalk.tw/news/view/2019-04-02/228196"}
+  - {date: 2022-02-14, outlets: [setn], kind: 控制者過世, note: 董事長林崑海過世,
+     source: "https://www.nownews.com/news/5717223"}
+  - {date: 2022-03-17, outlets: [setn], kind: 董事長變更, note: 張榮華出任董事長,
+     source: "https://www.mirrormedia.mg/story/20230613inv001"}
+  - {date: 2022-05-20, outlets: [pts], kind: 董事長變更, note: 胡元輝當選第七屆董事長,
+     source: "https://about.pts.org.tw/pr/latestnews/article/4898"}
+  - {date: 2024-07-01, outlets: [cna], kind: 董事長變更, note: 李永得任董事長,
+     source: "http://www.cna.com.tw/100/article/news/202407010230/"}
+  - {date: 2026-06-24, outlets: [cna], kind: 董事長變更, note: 第 11 屆董監事公布，江春男接任董事長,
+     source: "https://www.storm.mg/article/11144017"}

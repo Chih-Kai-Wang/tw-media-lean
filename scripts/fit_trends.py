@@ -15,6 +15,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 import numpy as np
+import yaml
 
 from twmedia.annotate import PARTIES
 from twmedia.trend import smooth, summarize
@@ -52,6 +53,18 @@ def all_periods(first: str, last: str, kind: str) -> list[str]:
     return [date.fromordinal(o).isoformat() for o in range(a.toordinal(), b.toordinal() + 1)]
 
 
+def load_events(kind: str) -> tuple[float, dict[str, list[dict]]]:
+    """config/events.yaml -> (variance multiplier, outlet -> [{period, kind, note}]); "*" holds all-outlet events."""
+    cfg = yaml.safe_load((ROOT / "config" / "events.yaml").read_text(encoding="utf-8"))
+    by_outlet: dict[str, list[dict]] = defaultdict(list)
+    for e in cfg["events"]:
+        day = str(e["date"]) if len(str(e["date"])) == 10 else f"{e['date']}-01"
+        per = period_of(day, kind)
+        for o in (["*"] if e["outlets"] == "all" else [f"news_{k}" for k in e["outlets"]]):
+            by_outlet[o].append({"period": per, "date": str(e["date"]), "kind": e["kind"], "note": e["note"]})
+    return float(cfg["jump"]), by_outlet
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--period", choices=["month", "week", "day"], default="month")
@@ -59,6 +72,9 @@ def main() -> None:
     ap.add_argument("--labels", choices=["llm", "model"], default="llm",
                     help="llm: Vertex/pilot jurors; model: the trained decision model (all sampled articles)")
     ap.add_argument("--model", default="tw-media-lean-v1", help="decision model name, with --labels model")
+    ap.add_argument("--no-events", action="store_true",
+                    help="ignore config/events.yaml (plain random walk; the fit Method F's event studies read)")
+    ap.add_argument("--jump", type=float, default=None, help="override the variance multiplier (sensitivity checks)")
     args = ap.parse_args()
     kind = args.period
 
@@ -108,17 +124,26 @@ def main() -> None:
                     continue  # 台灣民眾黨 was founded in 2019-08; earlier mentions are other parties or misreadings
                 cells[(source, party)][per].append(stances)
 
-    out = {"period": kind, "generated": date.today().isoformat(), "files": [Path(f).name for f in files], "series": []}
+    mult, events = (1.0, {}) if args.no_events else load_events(kind)
+    mult = args.jump if args.jump is not None else mult
+    out = {"period": kind, "generated": date.today().isoformat(), "files": [Path(f).name for f in files],
+           "events": not args.no_events, "jump": mult, "series": []}
     for (source, party), by_per in sorted(cells.items()):
         pers = all_periods(min(by_per), max(by_per), kind)
-        fit = smooth([summarize(by_per.get(p, [])) for p in pers])
+        ev = [e for e in events.get("*", []) + events.get(source, []) if e["period"] in pers[1:]]
+        jump = np.ones(len(pers))
+        for e in ev:  # the first period has no step before it, so an event there changes nothing
+            jump[pers.index(e["period"])] = mult
+        fit = smooth([summarize(by_per.get(p, [])) for p in pers], jump=jump)
         out["series"].append({
-            "outlet": source, "party": party, "tau": fit["tau"],
+            "outlet": source, "party": party, "tau": fit["tau"], "events": ev,
             "points": [{"period": p, "n": len(by_per.get(p, [])), "mean": round(float(m), 3),
                         "lo": round(float(lo), 3), "hi": round(float(hi), 3)}
                        for p, m, lo, hi in zip(pers, fit["mean"], fit["lo"], fit["hi"])],
         })
-    path = ROOT / "data" / "derived" / f"trends_{kind}{'_model' if args.labels == 'model' else ''}.json"
+    path = ROOT / "data" / "derived" / (f"trends_{kind}{'_model' if args.labels == 'model' else ''}"
+                                         f"{'_noevents' if args.no_events else ''}"
+                                         f"{f'_jump{mult:g}' if args.jump is not None else ''}.json")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"{len(out['series'])} series, {len(votes)} annotated articles -> {path.relative_to(ROOT)}")
