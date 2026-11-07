@@ -1,6 +1,7 @@
 """Label articles with a trained decision model (scripts/train_decision_model.py) and write calibrated probabilities.
 
     uv run --extra train python scripts/predict_decision_model.py --model data/models/<name> --sources "news_*"
+    (add --update to label only articles not yet in the output file, --political-only to skip articles naming no party)
 
 Output: data/annotations/model_<name>.jsonl, one line per article: key, per-head class probabilities (after
 temperature scaling), and the codebook-style label (argmax; stance as the expected value). PTT may be labelled
@@ -16,6 +17,7 @@ from pathlib import Path
 
 import torch
 from train_decision_model import GENRES, HEADS, PARTIES, TOPICS, Model
+from vertex_batch import POLITICAL
 
 from transformers import AutoTokenizer
 
@@ -41,6 +43,10 @@ def main() -> None:
     ap.add_argument("--model", required=True)
     ap.add_argument("--sources", default="news_*")
     ap.add_argument("--batch", type=int, default=32)
+    ap.add_argument("--update", action="store_true", help="keep existing output and label only new articles")
+    ap.add_argument("--political-only", action="store_true",
+                    help="skip articles that name no party or party leader (the jury's sampling filter); the model "
+                         "would label almost all of them non-political, and the history backfill is mostly such articles")
     args = ap.parse_args()
     mdir = Path(args.model)
     cfg = json.loads((mdir / "config.json").read_text())
@@ -55,11 +61,14 @@ def main() -> None:
     for f in sorted(glob.glob(str(ROOT / "data" / "raw" / args.sources / "*.jsonl"))):
         for line in open(f, encoding="utf-8"):
             r = json.loads(line)
-            if r.get("text"):
+            if r.get("text") and not (args.political_only and not POLITICAL.search((r.get("title") or "") + r["text"])):
                 rows.append((f"{Path(f).parent.name}:{r['id']}", (r.get("title") or "") + "\n" + r["text"]))
     tag = args.sources.replace("*", "").strip("_") or "all"
     out_path = ROOT / "data" / "annotations" / f"model_{mdir.name}_{tag}.jsonl"
-    with open(out_path, "w", encoding="utf-8") as out, torch.no_grad():
+    if args.update and out_path.exists():
+        done = {json.loads(line)["key"] for line in open(out_path, encoding="utf-8")}
+        rows = [r for r in rows if r[0] not in done]
+    with open(out_path, "a" if args.update else "w", encoding="utf-8") as out, torch.no_grad():
         for i in range(0, len(rows), args.batch):
             chunk = rows[i : i + args.batch]
             enc = tok([t for _, t in chunk], truncation=True, max_length=cfg["max_len"], padding=True, return_tensors="pt")

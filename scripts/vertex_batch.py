@@ -144,7 +144,8 @@ def _item(kind: str, r: dict, title: str | None = None, text: str | None = None)
 
 
 def items_live(first: str, last: str, per_day: int = 15) -> list[dict]:
-    """Election window: up to `per_day` political articles per outlet per publication day."""
+    """Election window: up to `per_day` political articles per outlet per publication day.
+    Weekly from 11/10: `build live <first> <last> 8`, the 7 days before the run (8 a day; 15 for the election week, see private/gcp.md)."""
     rng, done = random.Random(f"live-{first}-{last}"), annotated()
     by_cell: dict[tuple[str, str], list[dict]] = {}
     for r in load("news_*").values():
@@ -154,7 +155,7 @@ def items_live(first: str, last: str, per_day: int = 15) -> list[dict]:
     out = []
     for cell in sorted(by_cell):
         pool = sorted(by_cell[cell], key=lambda r: r["id"])
-        out += [_item("news", r) for r in rng.sample(pool, min(per_day, len(pool)))]
+        out += [_item("news", r) for r in rng.sample(pool, min(int(per_day), len(pool)))]
     return out
 
 
