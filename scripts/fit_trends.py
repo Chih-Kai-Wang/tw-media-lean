@@ -99,8 +99,9 @@ def main() -> None:
                     v = d["label"]["parties"][party]
                     if v["mentioned"] and v["stance"] is not None:
                         votes[aid][party].append(float(v["stance"]))
-    files = files if args.labels == "model" else (
-        glob.glob(str(ROOT / "data" / "annotations" / "vertex_*.jsonl")) + glob.glob(str(ROOT / "data" / "annotations" / "pilot_*.jsonl")))
+    files = files if args.labels == "model" else [  # flash-lite only checks the ranking; it is not a juror (jury-agreement.md)
+        f for f in glob.glob(str(ROOT / "data" / "annotations" / "vertex_*.jsonl")) + glob.glob(str(ROOT / "data" / "annotations" / "pilot_*.jsonl"))
+        if "flash-lite" not in Path(f).name]
     for f in ([] if args.labels == "model" else files):
         for line in open(f, encoding="utf-8"):
             d = json.loads(line)
