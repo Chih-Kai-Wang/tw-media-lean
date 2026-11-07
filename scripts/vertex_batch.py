@@ -56,8 +56,7 @@ LABELS = {"project": "tw-media-lean"}
 PRICE = {"gemini-3.8-flash": (0.825, 4.125),
          "gemini-3.5-flash-lite": (0.165, 1.375),
          "gpt-oss-120b-maas": (0.045, 0.18),
-         # not billed yet; batch price from a search excerpt of the pricing page, 2026-11-03 (not verified)
-         "llama-4-maverick-17b-128e-instruct-maas": (0.175, 0.575)}
+         "llama-4-maverick-17b-128e-instruct-maas": (0.175, 0.575)}  # matches the bill, 2026-11-07
 PUBLISHER = {"gpt-oss-120b-maas": "openai", "llama-4-maverick-17b-128e-instruct-maas": "meta"}
 OPENAI_FORMAT = set(PUBLISHER)  # open models take OpenAI chat-completions lines, not Gemini's `request`
 # gpt-oss degenerates under response_format=json_object (probe, 2026-11-03), so it relies on the prompt alone
