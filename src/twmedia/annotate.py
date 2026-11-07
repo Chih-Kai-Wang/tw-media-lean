@@ -53,6 +53,37 @@ PROMPT = """你是政治傳播研究的標註員。請依照下列標註規則�
 {text}
 """
 
+# Same codebook and output format, reworded, with the parties and the stance scale in the opposite order. For the
+# prompt-sensitivity check (PLAN.md §D.4): conclusions should not depend on the wording. Not used for labelling.
+PROMPT_ALT_HEAD = """請以媒體研究者的角度閱讀下面這篇台灣新聞，依照固定的編碼規則，記錄文章對三個政黨的呈現方式。
+
+三個政黨的代號：DPP 是民主進步黨，TPP 是台灣民眾黨，KMT 是中國國民黨。
+以下都算「提及」該黨：黨名、黨職人員、該黨的民選公職或候選人、該黨的立法院黨團，以及以執政黨身分被評論的該黨政府。
+
+整篇文章要記錄：
+- political：內容是否和台灣政治相關，填 true 或 false
+- genre：opinion（評論、社論）、news（新聞報導）、press_release（政黨或政府的新聞稿）、other，四選一
+- topic：從 election、cross_strait、foreign_defense、economy、energy_environment、justice_scandal、legislature、social_welfare、other 中選一個
+
+每個政黨要記錄：
+- mentioned：文章有沒有提到這個黨，填 true 或 false
+- stance：文章把這個黨呈現得多正面或多負面。2 非常正面、1 正面、0 中立或正負相抵、-1 負面、-2 非常負面；沒提到就填 null
+- salience：3 主角、2 次要角色、1 只是順帶提到、0 沒提到
+- quoted：文章有沒有直接引用這個黨的人說的話，填 true 或 false
+
+注意：
+1. 要記錄的是文章如何呈現該黨，不是事件本身是好是壞。語氣平實、也讓對方有回應空間的報導，比情緒化或只有單方說法的報導更接近 0。
+2. 有引述不代表有立場：文章引述甲黨批評乙黨，但也平衡呈現乙黨的回應，乙黨的 stance 就應接近 0。
+3. 只根據這篇文章本身判斷。
+
+請只輸出一個 JSON 物件，不要加任何說明：
+{"political": true, "genre": "news", "topic": "election",
+  "parties": {"DPP": {"mentioned": true, "stance": 0, "salience": 2, "quoted": false},
+              "TPP": {"mentioned": false, "stance": null, "salience": 0, "quoted": false},
+              "KMT": {"mentioned": false, "stance": null, "salience": 0, "quoted": false}}}
+
+"""
+
 OUTLET_NAMES = re.compile(
     r"中央社|中央通訊社|自由時報|聯合報|聯合新聞網|中國時報|中時新聞網|ETtoday|東森|TVBS|三立|SETN|民視|公視|風傳媒|鏡週刊|鏡新聞"
 )

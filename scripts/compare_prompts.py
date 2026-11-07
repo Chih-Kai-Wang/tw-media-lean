@@ -1,0 +1,75 @@
+"""Prompt-sensitivity check (PLAN.md §D.4): the same articles under the original and a reworded prompt.
+
+Reads each juror's labels on data/vertex/prompt_alt/ (scripts/vertex_batch.py build prompt_alt) and its labels on
+the same articles with the original prompt, and writes docs/prompt-sensitivity.md: per-article agreement
+(Krippendorff's alpha, ordinal), the mean shift, and the outlet ranking under each prompt.
+
+    uv run python scripts/compare_prompts.py
+"""
+
+from __future__ import annotations
+
+import json
+from datetime import date
+from pathlib import Path
+
+import numpy as np
+import yaml
+from compare_jurors import ANN, ORIGIN, alpha, labels
+from pilot_annotation import stance
+
+ROOT = Path(__file__).resolve().parents[1]
+JURORS = ["gemini-3.8-flash", "gpt-oss-120b-maas", "llama-4-maverick-17b-128e-instruct-maas"]
+PARTIES = ("KMT", "DPP", "TPP")
+
+
+def alt_labels(model: str) -> dict[str, dict]:
+    f = ANN / f"vertex_{model}_prompt_alt.jsonl"
+    return {json.loads(line)["key"]: json.loads(line).get("label") or {} for line in open(f, encoding="utf-8")} if f.exists() else {}
+
+
+def main() -> None:
+    src = {json.loads(line)["key"]: json.loads(line)["source"]
+           for line in open(ROOT / "data" / "vertex" / "prompt_alt" / "items.jsonl", encoding="utf-8")}
+    names = {k: v["name"] for k, v in yaml.safe_load((ROOT / "config" / "sources.yaml").read_text(encoding="utf-8"))["outlets"].items()}
+    outlet = lambda k: names.get(src[k].split("_", 1)[1].removesuffix("_wb"), src[k])
+    jurors = [m for m in JURORS if alt_labels(m)]
+    L = [f"# 換提示詞測試\n\n日期：{date.today().isoformat()}　陪審員：" + "、".join(f"`{m}`（{ORIGIN.get(m, '?')}）" for m in jurors) + "\n",
+         f"研究設計 D.4：換一種說法，結論不應改變。從陪審一致性測試的新聞中，每家媒體抽 50 篇（不足者全取），共 {len(src)} 篇。"
+         "標註規則與輸出格式相同；改寫的提示詞換了措辭，政黨順序改為民進黨、民眾黨、國民黨，立場量尺由正到負描述"
+         "（`src/twmedia/annotate.py` 的 `PROMPT_ALT_HEAD`）。文章內容與遮蔽方式完全相同。\n",
+         "## 1. 逐篇一致性（新舊提示詞，Krippendorff's α，序位）與平均偏移\n",
+         "偏移 = 改寫後平均分數 − 原提示詞平均分數（兩者都有分數的文章）。\n",
+         "| 陪審員 | 政黨 | 篇數 | α | 偏移 |", "|---|---|---|---|---|"]
+    gaps = {}
+    for m in jurors:
+        orig, alt = labels(m), alt_labels(m)
+        keys = [k for k in src if orig.get(k, {}).get("parties") and alt.get(k, {}).get("parties")]
+        for p in PARTIES:
+            a = np.array([stance(orig[k], p) for k in keys])
+            b = np.array([stance(alt[k], p) for k in keys])
+            both = ~np.isnan(a) & ~np.isnan(b)
+            L.append(f"| {m} | {p} | {both.sum()} | {alpha([a, b]):.2f} | {np.mean(b[both] - a[both]):+.2f} |")
+        for tag, lab in (("原", orig), ("改", alt)):
+            by = {}
+            for k in keys:
+                kv, dv = stance(lab[k], "KMT"), stance(lab[k], "DPP")
+                if not (np.isnan(kv) or np.isnan(dv)):
+                    by.setdefault(outlet(k), []).append(kv - dv)
+            gaps[(m, tag)] = {o: np.mean(v) for o, v in by.items() if len(v) >= 15}
+
+    L += ["\n## 2. 各媒體排序\n",
+          "「國民黨分數 − 民進黨分數」的平均（同時提及兩黨、每家至少 15 篇；樣本小，只看排序是否一致）。最後一列為同一位陪審員新舊提示詞的排名相關（Spearman ρ）。\n"]
+    common = sorted(set.intersection(*(set(g) for g in gaps.values())), key=lambda o: gaps[(jurors[0], "原")][o])
+    cols = [(m, t) for m in jurors for t in ("原", "改")]
+    L += ["| 媒體 | " + " | ".join(f"{m}（{t}）" for m, t in cols) + " |", "|---" * (len(cols) + 1) + "|"]
+    L += [f"| {o} | " + " | ".join(f"{gaps[c][o]:+.2f}" for c in cols) + " |" for o in common]
+    rank = lambda v: np.argsort(np.argsort(v))
+    rho = {m: np.corrcoef(rank([gaps[(m, "原")][o] for o in common]), rank([gaps[(m, "改")][o] for o in common]))[0, 1] for m in jurors}
+    L.append("| ρ（新舊） | " + " | ".join(f"{rho[m]:.2f}" if t == "改" else "" for m, t in cols) + " |")
+    (ROOT / "docs" / "prompt-sensitivity.md").write_text("\n".join(L) + "\n", encoding="utf-8")
+    print("\n".join(L))
+
+
+if __name__ == "__main__":
+    main()

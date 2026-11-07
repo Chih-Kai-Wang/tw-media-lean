@@ -34,6 +34,8 @@ def labels(model: str, exclude_swap: bool = True) -> dict[str, dict]:
     for f in glob.glob(str(ANN / f"vertex_{model}_*.jsonl")):
         if exclude_swap and Path(f).stem.endswith("_swap"):
             continue
+        if Path(f).stem.endswith("_prompt_alt"):  # same articles, reworded prompt: kept apart (scripts/compare_prompts.py)
+            continue
         for line in open(f, encoding="utf-8"):
             d = json.loads(line)
             out.setdefault(d["key"], d.get("label") or {})

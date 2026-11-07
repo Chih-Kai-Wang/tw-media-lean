@@ -29,7 +29,7 @@ from pathlib import Path
 import httpx
 import yaml
 
-from twmedia.annotate import CODEBOOK_VERSION, build_prompt, mask_people, parse, swap_parties
+from twmedia.annotate import CODEBOOK_VERSION, PROMPT_ALT_HEAD, build_prompt, mask_people, parse, swap_parties
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "data" / "vertex"
@@ -234,6 +234,32 @@ def juror2(n: int = 3000) -> None:
     print(f"{len(picked)} requests -> {d.relative_to(ROOT)}")
 
 
+def prompt_alt(per_outlet: int = 50) -> None:
+    """Prompt-sensitivity check (PLAN.md §D.4): `per_outlet` news articles per outlet from juror2, same masked title
+    and text, but the reworded instructions of twmedia.annotate.PROMPT_ALT_HEAD. Writes data/vertex/prompt_alt/."""
+    rng = random.Random(20261107)
+    req = (OUT / "juror2" / "requests.jsonl").read_text(encoding="utf-8").splitlines()
+    idx = (OUT / "juror2" / "items.jsonl").read_text(encoding="utf-8").splitlines()
+    by_outlet: dict[str, list] = {}
+    for r, i in zip(req, idx):
+        it = json.loads(i)
+        if not it["key"].startswith("anchor:"):
+            by_outlet.setdefault(it["source"].split("_", 1)[1].removesuffix("_wb"), []).append((r, it))
+    d = OUT / "prompt_alt"
+    d.mkdir(parents=True, exist_ok=True)
+    n = 0
+    with open(d / "requests.jsonl", "w", encoding="utf-8") as fr, open(d / "items.jsonl", "w", encoding="utf-8") as fi:
+        for outlet in sorted(by_outlet):
+            for r, it in rng.sample(by_outlet[outlet], min(int(per_outlet), len(by_outlet[outlet]))):
+                body = json.loads(r)
+                part = body["request"]["contents"][0]["parts"][0]
+                part["text"] = PROMPT_ALT_HEAD + part["text"][part["text"].index("標題："):]
+                fr.write(json.dumps(body, ensure_ascii=False) + "\n")
+                fi.write(json.dumps({"hash": prompt_hash(part["text"]), "key": it["key"], "source": it["source"]}) + "\n")
+                n += 1
+    print(f"{n} requests -> {d.relative_to(ROOT)}")
+
+
 def prompt_hash(prompt: str) -> str:
     return hashlib.sha256(prompt.encode()).hexdigest()[:20]
 
@@ -269,6 +295,8 @@ def build(name: str, *args: str) -> None:
         return juror2(*map(int, args))
     if name == "entry":
         return entry_test(*map(int, args))
+    if name == "prompt_alt":
+        return prompt_alt(*map(int, args))
     makers = {"pilot90": items_pilot90, "pilot1000": items_pilot1000, "anchors": items_anchors,
               "swap": items_swap, "history": items_history, "live": items_live}
     items = makers[name](*args)
