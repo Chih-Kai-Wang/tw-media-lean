@@ -57,7 +57,7 @@
 1. 陪審團一致性（Krippendorff's α）
 2. 已知立場錨點：政黨自己的新聞稿應判為對自己有利
 3. 政黨對調測試：遮蔽人名、互換黨名後，分數應跟著互換（[docs/swap-test.md](docs/swap-test.md)）
-4. 換提示詞、換模型，結論不應改變
+4. 換提示詞、換模型，結論不應改變（[docs/prompt-sensitivity.md](docs/prompt-sensitivity.md)、[docs/jury-agreement.md](docs/jury-agreement.md)）
 5. 用語基準法與 LLM 標註在媒體層級的一致程度
 
 錨點比一般新聞立場鮮明，因此錨點上的準確率是上限參考，不代表一般新聞的準確率。陪審團分歧納入不確定區間；意見不一致的文章另行整理公開（[docs/jury-disagreements.md](docs/jury-disagreements.md)）。

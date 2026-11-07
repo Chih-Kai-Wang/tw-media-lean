@@ -53,13 +53,15 @@ def main() -> None:
         for tag, lab in (("原", orig), ("改", alt)):
             by = {}
             for k in keys:
-                kv, dv = stance(lab[k], "KMT"), stance(lab[k], "DPP")
-                if not (np.isnan(kv) or np.isnan(dv)):
-                    by.setdefault(outlet(k), []).append(kv - dv)
-            gaps[(m, tag)] = {o: np.mean(v) for o, v in by.items() if len(v) >= 15}
+                for p in ("KMT", "DPP"):
+                    v = stance(lab[k], p)
+                    if not np.isnan(v):
+                        by.setdefault((outlet(k), p), []).append(v)
+            ok = lambda o: all(len(by.get((o, p), [])) >= 10 for p in ("KMT", "DPP"))
+            gaps[(m, tag)] = {o: np.mean(by[(o, "KMT")]) - np.mean(by[(o, "DPP")]) for o, _ in by if ok(o)}
 
     L += ["\n## 2. 各媒體排序\n",
-          "「國民黨分數 − 民進黨分數」的平均（同時提及兩黨、每家至少 15 篇；樣本小，只看排序是否一致）。最後一列為同一位陪審員新舊提示詞的排名相關（Spearman ρ）。\n"]
+          "國民黨平均分數 − 民進黨平均分數（每家每黨至少 10 篇；每家只有約 50 篇，數值本身不穩定，只看排序是否一致）。最後一列為同一位陪審員新舊提示詞的排名相關（Spearman ρ）。\n"]
     common = sorted(set.intersection(*(set(g) for g in gaps.values())), key=lambda o: gaps[(jurors[0], "原")][o])
     cols = [(m, t) for m in jurors for t in ("原", "改")]
     L += ["| 媒體 | " + " | ".join(f"{m}（{t}）" for m, t in cols) + " |", "|---" * (len(cols) + 1) + "|"]
@@ -67,6 +69,13 @@ def main() -> None:
     rank = lambda v: np.argsort(np.argsort(v))
     rho = {m: np.corrcoef(rank([gaps[(m, "原")][o] for o in common]), rank([gaps[(m, "改")][o] for o in common]))[0, 1] for m in jurors}
     L.append("| ρ（新舊） | " + " | ".join(f"{rho[m]:.2f}" if t == "改" else "" for m, t in cols) + " |")
+    L += ["\n## 判讀\n",
+          "- **主要陪審員 Gemini 幾乎不受措辭影響**：逐篇 α 0.84–0.96，媒體排序 ρ 0.99，平均偏移不超過 0.1 分。"
+          "正式結果以它的標籤為主（決策模型也是向它學習），所以這項檢驗主要回答的是：結論不是某一種提示詞寫法造成的",
+          "- **兩個開源模型對措辭較敏感**：α 約 0.7–0.8，排序 ρ 0.81–0.85。這與不同模型之間的一致程度相近"
+          "（[jury-agreement.md](jury-agreement.md)），所以它們的分數變動應視為陪審團不確定性的一部分",
+          "- 偏移沒有一致方向：同一個政黨在不同陪審員下有正有負，看不出改寫系統性地偏向某一黨",
+          "- 每家媒體只有約 50 篇，個別媒體的數值不穩定（例如公視在 Llama 4 下由負轉正）；這裡只用來檢驗排序與方向，媒體位置以大樣本結果為準"]
     (ROOT / "docs" / "prompt-sensitivity.md").write_text("\n".join(L) + "\n", encoding="utf-8")
     print("\n".join(L))
 
