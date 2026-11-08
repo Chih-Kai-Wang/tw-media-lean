@@ -3,7 +3,7 @@ name = "twmedia"
 version = "0.1.0"
 description = "Measuring partisan leaning of Taiwanese media over time"
 authors = [
-    { name = "f0909172434", email = "290806361+f0909172434@users.noreply.github.com" }
+    { name = "Chih-Kai-Wang", email = "290806361+Chih-Kai-Wang@users.noreply.github.com" }
 ]
 requires-python = ">=3.12"
 dependencies = [

@@ -16,7 +16,7 @@ from urllib.parse import urlsplit
 
 import httpx
 
-USER_AGENT = "twmedia-research/0.1 (+https://github.com/f0909172434)"
+USER_AGENT = "twmedia-research/0.1 (+https://github.com/Chih-Kai-Wang)"
 ROBOTS_AGENT = "twmedia-research"
 
 _CHALLENGE_MARKERS = (

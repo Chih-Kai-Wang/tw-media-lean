@@ -6,7 +6,7 @@ title: 隱私權政策 Privacy Policy — tw-media-lean
 
 最後更新：2026-11-01
 
-「台灣媒體政黨傾向分析」（tw-media-lean，以下稱本研究）是一個非營利、開源的學術研究計畫，程式碼公開於 <https://github.com/f0909172434/tw-media-lean>。本研究以公開、可重現的方法，分析台灣媒體與公開社群內容對各政黨的呈現方式。
+「台灣媒體政黨傾向分析」（tw-media-lean，以下稱本研究）是一個非營利、開源的學術研究計畫，程式碼公開於 <https://github.com/Chih-Kai-Wang/tw-media-lean>。本研究以公開、可重現的方法，分析台灣媒體與公開社群內容對各政黨的呈現方式。
 
 ## 我們收集哪些資料
 
@@ -41,7 +41,7 @@ Email：f0909172434@gmail.com
 
 Last updated: 2026-11-01
 
-tw-media-lean is a non-profit, open-source academic research project (<https://github.com/f0909172434/tw-media-lean>) that measures how Taiwanese media and public social media content portray political parties.
+tw-media-lean is a non-profit, open-source academic research project (<https://github.com/Chih-Kai-Wang/tw-media-lean>) that measures how Taiwanese media and public social media content portray political parties.
 
 - **What we collect:** publicly published articles from news and party websites, and **public** social media content (public posts by media outlets and public figures, and public posts matching political keywords) obtained through official platform APIs, including Meta's Threads API. We do not collect private messages, non-public content, or contact details.
 - **How we use it:** academic research only. No commercial use, no sale, no advertising, no individual profiling.

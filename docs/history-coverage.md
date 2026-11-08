@@ -11,7 +11,7 @@
 - 端點 `https://web.archive.org/cdx/search/cdx`：`output=json`、`fl=timestamp,original,statuscode,mimetype`、`filter=statuscode:200`、`collapse=urlkey`、`matchType=prefix`、`limit=5000`（第二輪 probe 為 300）。
 - 每年只抽 3 月（`from=YYYY0301&to=YYYY0331`），以月計數 × 12 推估全年；3 月無事件偏誤的假設未驗證（2014-03 有太陽花運動）。
 - 以 URL 前綴縮小範圍，再以正則挑出文章頁、排除首頁與分類頁，要求 `mimetype` 含 html；計數為 `urlkey` 去重後的網址數。
-- UA `twmedia-research/0.1 (+https://github.com/f0909172434)`；全域每 2 秒最多啟動 1 個請求；429／5xx／逾時退避重試至多 3 次（8、16、32 秒）。
+- UA `twmedia-research/0.1 (+https://github.com/Chih-Kai-Wang)`；全域每 2 秒最多啟動 1 個請求；429／5xx／逾時退避重試至多 3 次（8、16、32 秒）。
 - 抽驗：每家取 2012 與 2015 各一篇（風傳媒 2014／2015），以 `https://web.archive.org/web/<timestamp>id_/<url>` 取得，trafilatura 擷取，內文 >200 字元且中文字 >100 為通過。
 
 ## 文章網址型態（調查當時）

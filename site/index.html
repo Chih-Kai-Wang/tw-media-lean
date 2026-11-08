@@ -57,12 +57,12 @@
 
   <h2>怎麼算的</h2>
   <ul>
-    <li>每篇政治新聞由多個大型語言模型依同一份<a href="https://github.com/f0909172434/tw-media-lean/blob/main/docs/codebook.md">標註規則</a>判斷，模型看不到媒體名稱。</li>
-    <li><strong>沒有使用人工標註。</strong>正確性用自動方法檢查：政黨自己的新聞稿要判對、把文中黨名與人名對調後分數要跟著對調、不同模型要一致。結果見 <a href="https://github.com/f0909172434/tw-media-lean/tree/main/docs">docs/</a>。</li>
+    <li>每篇政治新聞由多個大型語言模型依同一份<a href="https://github.com/Chih-Kai-Wang/tw-media-lean/blob/main/docs/codebook.md">標註規則</a>判斷，模型看不到媒體名稱。</li>
+    <li><strong>沒有使用人工標註。</strong>正確性用自動方法檢查：政黨自己的新聞稿要判對、把文中黨名與人名對調後分數要跟著對調、不同模型要一致。結果見 <a href="https://github.com/Chih-Kai-Wang/tw-media-lean/tree/main/docs">docs/</a>。</li>
     <li>每家媒體、每個政黨的分數用隨機漫步模型平滑；文章少或模型意見分歧的時期，區間會變寬。</li>
     <li>網站只公開彙總分數，不公開新聞原文與任何個人資料。程式與方法全部開源。</li>
   </ul>
-  <p class="muted">程式碼：<a href="https://github.com/f0909172434/tw-media-lean">github.com/f0909172434/tw-media-lean</a>　·　<span id="generated"></span></p>
+  <p class="muted">程式碼：<a href="https://github.com/Chih-Kai-Wang/tw-media-lean">github.com/Chih-Kai-Wang/tw-media-lean</a>　·　<span id="generated"></span></p>
 </main>
 <script>
 const PARTY = { KMT: "--kmt", DPP: "--dpp", TPP: "--tpp" };

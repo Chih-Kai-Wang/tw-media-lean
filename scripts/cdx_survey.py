@@ -29,7 +29,7 @@ import trafilatura
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "history_survey"
 CACHE = OUT / "cdx"
-UA = "twmedia-research/0.1 (+https://github.com/f0909172434)"
+UA = "twmedia-research/0.1 (+https://github.com/Chih-Kai-Wang)"
 CDX = "https://web.archive.org/cdx/search/cdx"
 FULL_LIMIT = LIMIT = 5000  # a raw result of LIMIT rows means the count is only a lower bound
 YEARS = (2012, 2013, 2014, 2015)

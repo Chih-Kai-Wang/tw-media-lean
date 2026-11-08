@@ -3,7 +3,7 @@
 調查與下載日期：2026-11-02。本文件說明有哪些資料、如何連到 12 家媒體、取得多少與缺口，不做相關或因果推論。
 
 抓取原則（同 [collection-status.md](collection-status.md)）：
-- User-Agent：`twmedia-research/0.1 (+https://github.com/f0909172434)`；不登入。
+- User-Agent：`twmedia-research/0.1 (+https://github.com/Chih-Kai-Wang)`；不登入。
 - 同一主機每 2.5–3 秒最多一次請求。
 - 遵守 robots.txt；robots.txt 無法取得或無規則者（data.gov.tw 當日回 500，ardata、pcc-api.openfun.app 無規則，api.ncc.gov.tw 回 403）依一般慣例視為無限制，只抓公開下載連結。
 - 遇 403、429 或驗證頁即停止，不繞過。

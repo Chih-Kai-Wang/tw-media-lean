@@ -1,5 +1,5 @@
 import time, subprocess, urllib.parse, collections, os, tempfile
-UA='twmedia-research/0.1 (+https://github.com/f0909172434)'
+UA='twmedia-research/0.1 (+https://github.com/Chih-Kai-Wang)'
 _last=collections.defaultdict(float)
 def _wait(host,delay):
     w=_last[host]+delay-time.time()

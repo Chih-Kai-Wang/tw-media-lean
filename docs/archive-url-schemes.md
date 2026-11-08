@@ -2,7 +2,7 @@
 
 調查日期：2026-11-02。目的：為「每家每月約 300 篇政治新聞」的隨機抽樣找出可行做法，以媒體自家網站優先，其次 Wayback。
 
-**探測方式**：User-Agent 為 `twmedia-research/0.1 (+https://github.com/f0909172434)`；每個主機先讀 robots.txt，以 `twmedia-research` 判斷；同一主機至少間隔 3.2 秒；不跟隨 robots 不允許的轉址。每家僅發出少量請求（含 robots.txt 與子網域）。Wayback CDX 查詢間隔 3–8 秒，約一半回 503／504（與 [history-coverage.md](history-coverage.md) 所記的不穩定一致）。抓回的頁面未納入 repo。
+**探測方式**：User-Agent 為 `twmedia-research/0.1 (+https://github.com/Chih-Kai-Wang)`；每個主機先讀 robots.txt，以 `twmedia-research` 判斷；同一主機至少間隔 3.2 秒；不跟隨 robots 不允許的轉址。每家僅發出少量請求（含 robots.txt 與子網域）。Wayback CDX 查詢間隔 3–8 秒，約一半回 503／504（與 [history-coverage.md](history-coverage.md) 所記的不穩定一致）。抓回的頁面未納入 repo。
 
 下文的「ID → 日期」都是實際抓頁面讀到的 `article:published_time`／JSON-LD `datePublished`。各年 1 月的 ID 是用這些點做線性內插的**估計值**，標「≈」。
 
