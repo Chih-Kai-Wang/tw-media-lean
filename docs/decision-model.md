@@ -87,7 +87,7 @@ v1 全部文章的格子如下：模型判為政治新聞、且同時提及兩�
 
 ## 選舉期間的漂移監測
 
-選舉期間每週用新刊出的新聞比對模型與老師，結果與警示門檻見 [drift-monitor.md](drift-monitor.md)。
+選舉期間每週用新刊出的新聞比對模型與老師，結果與警示門檻見 [drift-monitor.md](drift-monitor.md)。資料從歷史抽樣切換到即時收集時趨勢的跳動，拆解見 [source-switch.md](source-switch.md)。
 
 ## v0 的偏差與原因
 
