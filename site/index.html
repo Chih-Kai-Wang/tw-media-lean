@@ -4,105 +4,337 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>台灣媒體政黨傾向</title>
-<meta name="description" content="用公開、可重現的方法，追蹤台灣各家媒體如何呈現國民黨、民進黨、民眾黨。">
+<meta name="description" content="用公開、可重現的方法，追蹤 2012–2026 年台灣 12 家新聞媒體如何呈現國民黨與民進黨。">
 <style>
   :root {
-    --bg: #fbfaf7; --fg: #1d1d1b; --muted: #6b6a66; --line: #e3e1db; --card: #ffffff;
-    --kmt: #2f5fb3; --dpp: #2f8f4e; --tpp: #2aa6a6; --zero: #b9b6ad;
+    color-scheme: light;
+    --bg: #fbfaf7; --card: #ffffff; --fg: #1d1d1b; --muted: #5f5e5a; --line: #e3e1db; --grid: #eceae4;
+    --zero: #b9b6ad; --event: #a8a59c; --hover: #f2f0ea;
+    --kmt: #2f5fb3; --dpp: #2f8f4e;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #151514; --fg: #ecebe6; --muted: #a3a19a; --line: #34332f; --card: #1e1e1c;
-      --kmt: #7aa2ec; --dpp: #6cc48a; --tpp: #6fd3d3; --zero: #5b5953;
+      color-scheme: dark;
+      --bg: #151514; --card: #1e1e1c; --fg: #ecebe6; --muted: #a9a79f; --line: #34332f; --grid: #2a2a27;
+      --zero: #5b5953; --event: #6b6962; --hover: #2a2a27;
+      --kmt: #4a86e0; --dpp: #3a9e5e;
     }
   }
   :root[data-theme="dark"] {
-    --bg: #151514; --fg: #ecebe6; --muted: #a3a19a; --line: #34332f; --card: #1e1e1c;
-    --kmt: #7aa2ec; --dpp: #6cc48a; --tpp: #6fd3d3; --zero: #5b5953;
+    color-scheme: dark;
+    --bg: #151514; --card: #1e1e1c; --fg: #ecebe6; --muted: #a9a79f; --line: #34332f; --grid: #2a2a27;
+    --zero: #5b5953; --event: #6b6962; --hover: #2a2a27;
+    --kmt: #4a86e0; --dpp: #3a9e5e;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--fg);
          font: 16px/1.7 "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif; }
   main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
   h1 { font-size: 28px; line-height: 1.3; margin: 0 0 8px; }
-  h2 { font-size: 20px; margin: 40px 0 12px; }
+  h2 { font-size: 20px; margin: 40px 0 8px; }
   p { margin: 0 0 12px; }
   .lede { color: var(--muted); max-width: 46em; }
-  .notice { border: 1px solid var(--line); background: var(--card); padding: 12px 16px; border-radius: 8px; margin: 20px 0; }
-  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 14px; color: var(--muted); margin: 8px 0 16px; }
-  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px 8px; }
-  .card h3 { font-size: 16px; margin: 0 0 4px; }
-  .card svg { width: 100%; height: auto; display: block; }
-  .axis { font-size: 11px; fill: var(--muted); }
+  .notice { border: 1px solid var(--line); background: var(--card); padding: 12px 16px; border-radius: 8px; margin: 20px 0; font-size: 15px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 24px 0 8px;
+              position: sticky; top: 0; background: var(--bg); padding: 8px 0; z-index: 2; }
+  @media (max-width: 600px) { .controls { position: static; } }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--card); }
+  .seg button { font: inherit; font-size: 14px; color: var(--muted); background: none; border: 0; padding: 6px 12px; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { color: var(--fg); font-weight: 600; background: var(--hover); }
+  .seg button:focus-visible { outline: 2px solid var(--fg); outline-offset: -2px; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+  .legend i { display: inline-block; width: 16px; height: 2px; margin-right: 6px; vertical-align: 4px; }
+  .legend .ev { width: 1px; height: 12px; vertical-align: -1px; background: var(--event); }
   .muted { color: var(--muted); font-size: 14px; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px 8px; position: relative; }
+  .card h3 { font-size: 16px; margin: 0 0 2px; }
+  svg { width: 100%; height: auto; display: block; overflow: visible; }
+  svg:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; border-radius: 4px; }
+  .axis { font-size: 11px; fill: var(--muted); }
+  .dlabel { font-size: 11px; fill: var(--fg); }
+  .tip { position: absolute; pointer-events: none; background: var(--card); color: var(--fg); border: 1px solid var(--line);
+         border-radius: 6px; padding: 6px 10px; font-size: 13px; line-height: 1.5; box-shadow: 0 2px 8px rgb(0 0 0 / 0.12);
+         z-index: 3; min-width: 150px; max-width: 260px; }
+  .tip .row { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+  .tip .key { display: inline-block; width: 10px; height: 2px; flex: none; transform: translateY(-3px); }
+  .tip b { font-variant-numeric: tabular-nums; }
+  .tip .ev { color: var(--muted); white-space: normal; margin-top: 4px; border-top: 1px solid var(--line); padding-top: 4px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 4px 8px; border-bottom: 1px solid var(--line); }
+  th:first-child, td:first-child { text-align: left; }
+  details { margin-top: 8px; }
+  summary { cursor: pointer; color: var(--muted); font-size: 14px; }
   a { color: inherit; }
   ul { padding-left: 20px; }
+  li { margin-bottom: 4px; }
 </style>
 </head>
 <body>
 <main>
   <h1>台灣媒體政黨傾向</h1>
-  <p class="lede">用公開、可重現的方法，追蹤 12 家新聞媒體怎麼呈現國民黨、民進黨、民眾黨。每條線是該媒體對該黨的平均呈現（-2 很負面，+2 很正面），色帶是 95% 可信區間。</p>
+  <p class="lede">用公開、可重現的方法，追蹤 12 家新聞媒體 2012 年以來怎麼呈現國民黨與民進黨。分數是報導對該黨的平均呈現：−2 很負面，0 中性，+2 很正面。</p>
 
   <div class="notice" id="status">資料載入中…</div>
 
-  <div class="legend">
-    <span><i style="background:var(--kmt)"></i>國民黨</span>
-    <span><i style="background:var(--dpp)"></i>民進黨</span>
-    <span><i style="background:var(--tpp)"></i>民眾黨</span>
+  <div class="controls" role="group" aria-label="時間範圍">
+    <div class="seg" id="range">
+      <button type="button" data-range="all" aria-pressed="true">全期（2012 起，按月）</button>
+      <button type="button" data-range="recent" aria-pressed="false">近年（2022 起，按月）</button>
+      <button type="button" data-range="week" aria-pressed="false">選舉期間（2026-08 起，按週）</button>
+    </div>
+    <div class="legend" aria-hidden="true">
+      <span><i style="background:var(--kmt)"></i>國民黨</span>
+      <span><i style="background:var(--dpp)"></i>民進黨</span>
+      <span><i class="ev"></i>已知事件</span>
+    </div>
   </div>
+
+  <h2>各媒體的位置</h2>
+  <p class="muted" id="dumbbell-note">所選期間內，各媒體報導國民黨與民進黨的平均分數（依篇數加權）。依「國民黨 − 民進黨」排序：越上面越偏向民進黨，越下面越偏向國民黨。</p>
+  <div class="panel" style="position:relative">
+    <div id="dumbbell"></div>
+    <details>
+      <summary>表格</summary>
+      <table id="dumbbell-table"></table>
+    </details>
+  </div>
+
+  <h2>隨時間變化</h2>
+  <p class="muted">實線是平滑後的平均，色帶是 95% 可信區間；文章少或樣本不穩的時期區間較寬。灰色直線是事先列出的已知事件（政黨輪替、控制者或董事長變更），模型在那一期允許較大的變動，但不指定方向。把游標移到圖上、或用方向鍵，可看每期數字。</p>
   <div class="grid" id="grid"></div>
 
   <h2>怎麼算的</h2>
   <ul>
-    <li>每篇政治新聞由多個大型語言模型依同一份<a href="https://github.com/Chih-Kai-Wang/tw-media-lean/blob/main/docs/codebook.md">標註規則</a>判斷，模型看不到媒體名稱。</li>
-    <li><strong>沒有使用人工標註。</strong>正確性用自動方法檢查：政黨自己的新聞稿要判對、把文中黨名與人名對調後分數要跟著對調、不同模型要一致。結果見 <a href="https://github.com/Chih-Kai-Wang/tw-media-lean/tree/main/docs">docs/</a>。</li>
-    <li>每家媒體、每個政黨的分數用隨機漫步模型平滑；文章少或模型意見分歧的時期，區間會變寬。</li>
-    <li>網站只公開彙總分數，不公開新聞原文與任何個人資料。程式與方法全部開源。</li>
+    <li>每篇政治新聞先由多個大型語言模型依同一份<a href="https://github.com/Chih-Kai-Wang/tw-media-lean/blob/main/docs/codebook.md">標註規則</a>判斷，模型看不到媒體名稱。再用這些判斷訓練一個開源的決策模型，替所有文章評分（<a href="https://github.com/Chih-Kai-Wang/tw-media-lean/blob/main/docs/decision-model.md">說明</a>）。</li>
+    <li><strong>沒有使用人工標註。</strong>正確性用自動方法檢查：政黨自己的新聞稿要判對、把文中黨名與人名對調後分數要跟著對調、不同模型要一致、換一種提示詞說法結論不變。結果見 <a href="https://github.com/Chih-Kai-Wang/tw-media-lean/tree/main/docs">docs/</a>。</li>
+    <li>每家媒體、每個政黨的分數用隨機漫步模型平滑（<a href="https://github.com/Chih-Kai-Wang/tw-media-lean/blob/main/docs/trend-model.md">趨勢模型</a>）。選舉期間每週抽樣，比對決策模型與 LLM 陪審員是否仍一致（<a href="https://github.com/Chih-Kai-Wang/tw-media-lean/blob/main/docs/drift-monitor.md">漂移監測</a>）。</li>
+    <li>網站只公開彙總分數，不公開新聞原文與任何個人資料（<a href="https://github.com/Chih-Kai-Wang/tw-media-lean/blob/main/docs/privacy.md">隱私權政策</a>）。程式與方法全部開源。</li>
   </ul>
-  <p class="muted">程式碼：<a href="https://github.com/Chih-Kai-Wang/tw-media-lean">github.com/Chih-Kai-Wang/tw-media-lean</a>　·　<span id="generated"></span></p>
+
+  <h2>讀圖時要注意</h2>
+  <ul>
+    <li>分數衡量的是報導怎麼呈現政黨，不是媒體自稱的立場。執政黨通常承受較多批評，所以同一家媒體在不同執政期間的分數，部分反映的是誰在執政。</li>
+    <li>決策模型目前不給民眾黨立場分數：民眾黨相關的訓練文章太少，分數不夠穩定，所以這裡只呈現國民黨與民進黨。</li>
+    <li>所有標籤都來自語言模型，可信度仰賴上述自動檢驗；陪審員意見不一致的文章另外<a href="https://github.com/Chih-Kai-Wang/tw-media-lean/blob/main/docs/jury-disagreements.md">列出</a>，供讀者自行判斷。</li>
+    <li>歷史資料受各家網站保留期限與 Internet Archive 存檔範圍限制，部分媒體早期樣本較少，或較晚才有資料（<a href="https://github.com/Chih-Kai-Wang/tw-media-lean/blob/main/docs/collection-status.md">收集狀態</a>）。</li>
+    <li>2026 年 10 月起的文章來自即時收集，之前則是每月從網站與 Internet Archive 抽樣，兩者的抽樣方式不同。跨過這個分界的變化（包括選舉期間的週資料）正在檢驗，暫時不要解讀為媒體傾向改變。</li>
+    <li>各家「政治新聞」的初篩方式不同（網站分類或關鍵詞），最終由模型重新判定是否為政治新聞。</li>
+  </ul>
+  <p class="muted">程式碼：<a href="https://github.com/Chih-Kai-Wang/tw-media-lean">github.com/Chih-Kai-Wang/tw-media-lean</a>　·　<a href="data/trends.json">下載彙總資料（JSON）</a>　·　<span id="generated"></span></p>
 </main>
 <script>
-const PARTY = { KMT: "--kmt", DPP: "--dpp", TPP: "--tpp" };
-const W = 300, H = 150, PAD = { l: 26, r: 6, t: 8, b: 20 };
+const PARTIES = [["KMT", "國民黨", "--kmt"], ["DPP", "民進黨", "--dpp"]];
+const YMIN = -1.5, YMAX = 1.5;
+let DATA = null, RANGE = "all";
 
-function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmt = v => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(2);
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(SVGNS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function text(parent, attrs, s) { const t = el("text", attrs, parent); t.textContent = s; return t; }
+function div(cls, parent) { const d = document.createElement("div"); if (cls) d.className = cls; if (parent) parent.appendChild(d); return d; }
 
-function chart(series, periods) {
-  const x = i => PAD.l + (periods.length < 2 ? (W - PAD.l - PAD.r) / 2 : i * (W - PAD.l - PAD.r) / (periods.length - 1));
-  const y = v => PAD.t + (2 - Math.max(-2, Math.min(2, v))) * (H - PAD.t - PAD.b) / 4;
-  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img">`;
-  for (const v of [-2, -1, 0, 1, 2]) {
-    svg += `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${y(v)}" y2="${y(v)}" stroke="${css(v === 0 ? "--zero" : "--line")}" stroke-width="1"/>`;
-    svg += `<text class="axis" x="${PAD.l - 6}" y="${y(v) + 4}" text-anchor="end">${v > 0 ? "+" + v : v}</text>`;
-  }
-  svg += `<text class="axis" x="${PAD.l}" y="${H - 4}">${periods[0]}</text>`;
-  if (periods.length > 1) svg += `<text class="axis" x="${W - PAD.r}" y="${H - 4}" text-anchor="end">${periods.at(-1)}</text>`;
-  for (const s of series) {
-    const col = css(PARTY[s.party]);
-    const idx = s.points.map(p => periods.indexOf(p.period));
-    const band = s.points.map((p, i) => `${x(idx[i])},${y(p.hi)}`).concat(
-      s.points.map((p, i) => `${x(idx[i])},${y(p.lo)}`).reverse()).join(" ");
-    svg += `<polygon points="${band}" fill="${col}" opacity="0.15"/>`;
-    svg += `<polyline points="${s.points.map((p, i) => `${x(idx[i])},${y(p.mean)}`).join(" ")}" fill="none" stroke="${col}" stroke-width="2"/>`;
-    if (s.points.length === 1) svg += `<circle cx="${x(idx[0])}" cy="${y(s.points[0].mean)}" r="3" fill="${col}"/>`;
-  }
-  return svg + "</svg>";
+// The slice of data the current range selects: periods, series by outlet, events by outlet.
+function slice() {
+  const src = RANGE === "week" ? DATA.week : DATA.month;
+  const keep = p => RANGE !== "recent" || p >= "2022-01";
+  const periods = [...new Set(src.series.flatMap(s => s.points.map(p => p.period)))].filter(keep).sort();
+  const by = {};
+  for (const s of src.series) (by[s.outlet] ??= {})[s.party] = s.points.filter(p => keep(p.period));
+  const events = {};
+  for (const [o, ev] of Object.entries(src.events)) events[o] = ev.filter(e => periods.includes(e.period));
+  return { periods, by, events };
 }
 
+function averages(by) {
+  return Object.entries(by).map(([o, s]) => {
+    const r = { outlet: o, name: DATA.outlets[o] };
+    for (const [p] of PARTIES) {
+      const pts = (s[p] || []).filter(x => x.n > 0);
+      r[p + "_n"] = pts.reduce((a, x) => a + x.n, 0);
+      r[p] = r[p + "_n"] ? pts.reduce((a, x) => a + x.mean * x.n, 0) / r[p + "_n"] : NaN;
+    }
+    r.gap = r.KMT - r.DPP;
+    return r;
+  }).filter(r => !isNaN(r.gap)).sort((a, b) => a.gap - b.gap);
+}
+
+function tooltip(host, rows, evs) {
+  let tip = host.querySelector(".tip");
+  if (!tip) tip = div("tip", host);
+  tip.replaceChildren();
+  for (const r of rows) {
+    if (r.title) { const t = div("", tip); t.textContent = r.title; t.style.fontWeight = 600; continue; }
+    const row = div("row", tip);
+    const k = document.createElement("span"); k.className = "key"; k.style.background = css(r.color); row.appendChild(k);
+    const b = document.createElement("b"); b.textContent = r.value; row.appendChild(b);
+    const s = document.createElement("span"); s.className = "muted"; s.textContent = r.label; row.appendChild(s);
+  }
+  for (const e of evs || []) { const d = div("ev", tip); d.textContent = `${e.date}　${e.kind}：${e.note}`; }
+  return tip;
+}
+function place(tip, host, x, y) {
+  const w = tip.offsetWidth, hw = host.clientWidth;
+  tip.style.left = Math.max(0, Math.min(hw - w, x + 12)) + "px";
+  tip.style.top = Math.max(0, y - tip.offsetHeight - 8) + "px";
+}
+function hide(host) { host.querySelector(".tip")?.remove(); }
+
+function dumbbell(rows) {
+  const host = document.getElementById("dumbbell");
+  host.replaceChildren();
+  const W = Math.max(300, host.clientWidth), rowH = 28, PAD = { l: 72, r: 16, t: 24, b: 8 }, H = PAD.t + rows.length * rowH + PAD.b;
+  const lo = Math.min(-0.5, ...rows.flatMap(r => [r.KMT, r.DPP])) - 0.1, hi = Math.max(0.5, ...rows.flatMap(r => [r.KMT, r.DPP])) + 0.1;
+  const x = v => PAD.l + (v - lo) / (hi - lo) * (W - PAD.l - PAD.r);
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "各媒體報導國民黨與民進黨的平均分數" }, host);
+  for (let v = Math.ceil(lo * 2) / 2; v <= hi; v += 0.5) {
+    el("line", { x1: x(v), x2: x(v), y1: PAD.t - 6, y2: H - PAD.b, stroke: css(v === 0 ? "--zero" : "--grid"), "stroke-width": 1 }, svg);
+    text(svg, { class: "axis", x: x(v), y: PAD.t - 10, "text-anchor": "middle" }, v === 0 ? "0" : fmt(v).replace(".00", "").replace(/0$/, ""));
+  }
+  rows.forEach((r, i) => {
+    const y = PAD.t + i * rowH + rowH / 2;
+    const g = el("g", { tabindex: 0, role: "listitem", "aria-label": `${r.name}：國民黨 ${fmt(r.KMT)}，民進黨 ${fmt(r.DPP)}` }, svg);
+    const bg = el("rect", { x: 0, y: y - rowH / 2, width: W, height: rowH, fill: "transparent", rx: 4 }, g);
+    text(g, { class: "dlabel", x: PAD.l - 10, y: y + 4, "text-anchor": "end" }, r.name);
+    el("line", { x1: x(r.KMT), x2: x(r.DPP), y1: y, y2: y, stroke: css("--zero"), "stroke-width": 2 }, g);
+    for (const [p, , c] of PARTIES) el("circle", { cx: x(r[p]), cy: y, r: 5, fill: css(c), stroke: css("--card"), "stroke-width": 2 }, g);
+    const show = ev => {
+      bg.setAttribute("fill", css("--hover"));
+      const tip = tooltip(host.parentElement, [{ title: r.name },
+        ...PARTIES.map(([p, n, c]) => ({ color: c, value: fmt(r[p]), label: `${n}（${r[p + "_n"].toLocaleString()} 篇次）` })),
+        { color: "--zero", value: fmt(r.gap), label: "差距（國民黨 − 民進黨）" }]);
+      const box = host.parentElement.getBoundingClientRect(), sb = svg.getBoundingClientRect();
+      const px = ev && ev.clientX ? ev.clientX - box.left : (x(Math.max(r.KMT, r.DPP)) / W) * sb.width + sb.left - box.left;
+      place(tip, host.parentElement, px, (y - rowH / 2) / H * sb.height + sb.top - box.top);
+    };
+    const off = () => { bg.setAttribute("fill", "transparent"); hide(host.parentElement); };
+    g.addEventListener("pointermove", show); g.addEventListener("focus", () => show()); g.addEventListener("pointerleave", off); g.addEventListener("blur", off);
+  });
+  // direct labels on the top row, so party identity never rests on color alone
+  const r0 = rows[0], y0 = PAD.t + rowH / 2;
+  const left = r0.KMT < r0.DPP ? "KMT" : "DPP";
+  for (const [p, n] of PARTIES) text(svg, { class: "axis", x: x(r0[p]) + (p === left ? -9 : 9), y: y0 - 9, "text-anchor": p === left ? "end" : "start" }, n);
+  svg.setAttribute("role", "list");
+
+  const t = document.getElementById("dumbbell-table");
+  t.replaceChildren();
+  const head = t.insertRow();
+  for (const h of ["媒體", "國民黨", "民進黨", "差距", "篇次（國／民）"]) { const th = document.createElement("th"); th.textContent = h; head.appendChild(th); }
+  for (const r of rows) {
+    const tr = t.insertRow();
+    for (const v of [r.name, fmt(r.KMT), fmt(r.DPP), fmt(r.gap), `${r.KMT_n.toLocaleString()}／${r.DPP_n.toLocaleString()}`]) tr.insertCell().textContent = v;
+  }
+}
+
+function card(outlet, series, events, periods) {
+  const c = div("card");
+  const h = document.createElement("h3"); h.textContent = DATA.outlets[outlet]; c.appendChild(h);
+  const W = 320, H = 168, PAD = { l: 28, r: 44, t: 10, b: 22 };
+  const span = Math.max(1, periods.length - 1);
+  const x = i => PAD.l + i * (W - PAD.l - PAD.r) / span;
+  const y = v => PAD.t + (YMAX - Math.max(YMIN, Math.min(YMAX, v))) * (H - PAD.t - PAD.b) / (YMAX - YMIN);
+  const pos = Object.fromEntries(periods.map((p, i) => [p, i]));
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", tabindex: 0,
+    "aria-label": `${DATA.outlets[outlet]}：國民黨與民進黨分數隨時間變化，${periods[0]} 到 ${periods.at(-1)}。用左右方向鍵查看各期數字。` }, c);
+  for (const v of [-1, 0, 1]) {
+    el("line", { x1: PAD.l, x2: W - PAD.r, y1: y(v), y2: y(v), stroke: css(v === 0 ? "--zero" : "--grid"), "stroke-width": 1 }, svg);
+    text(svg, { class: "axis", x: PAD.l - 6, y: y(v) + 4, "text-anchor": "end" }, v > 0 ? "+" + v : v < 0 ? "−" + -v : "0");
+  }
+  text(svg, { class: "axis", x: PAD.l, y: H - 6 }, periods[0]);
+  text(svg, { class: "axis", x: W - PAD.r, y: H - 6, "text-anchor": "end" }, periods.at(-1));
+  for (const e of events) el("line", { x1: x(pos[e.period]), x2: x(pos[e.period]), y1: PAD.t, y2: H - PAD.b, stroke: css("--event"), "stroke-width": 1 }, svg);
+  const ends = [];
+  for (const [p, , col] of PARTIES) {
+    const pts = (series[p] || []).filter(q => q.period in pos);
+    if (!pts.length) continue;
+    const band = pts.map(q => `${x(pos[q.period])},${y(q.hi)}`).concat(pts.map(q => `${x(pos[q.period])},${y(q.lo)}`).reverse()).join(" ");
+    el("polygon", { points: band, fill: css(col), opacity: 0.16 }, svg);
+    el("polyline", { points: pts.map(q => `${x(pos[q.period])},${y(q.mean)}`).join(" "), fill: "none", stroke: css(col), "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+    ends.push([p, y(pts.at(-1).mean)]);
+  }
+  // direct end labels, nudged apart when the two lines end close together
+  if (ends.length === 2 && Math.abs(ends[0][1] - ends[1][1]) < 12) {
+    const mid = (ends[0][1] + ends[1][1]) / 2, up = ends[0][1] <= ends[1][1] ? 0 : 1;
+    ends[up][1] = mid - 6; ends[1 - up][1] = mid + 6;
+  }
+  for (const [p, yy] of ends) text(svg, { class: "dlabel", x: W - PAD.r + 4, y: yy + 4 }, PARTIES.find(q => q[0] === p)[1]);
+
+  const cross = el("line", { y1: PAD.t, y2: H - PAD.b, stroke: css("--muted"), "stroke-width": 1, visibility: "hidden" }, svg);
+  const dots = PARTIES.map(([, , col]) => el("circle", { r: 4, fill: css(col), stroke: css("--card"), "stroke-width": 2, visibility: "hidden" }, svg));
+  const hit = el("rect", { x: PAD.l - 6, y: 0, width: W - PAD.l - PAD.r + 12, height: H, fill: "transparent" }, svg);
+  const look = {};
+  for (const [p] of PARTIES) look[p] = Object.fromEntries((series[p] || []).map(q => [q.period, q]));
+  let cur = periods.length - 1;
+  const show = (i, clientX) => {
+    cur = Math.max(0, Math.min(periods.length - 1, i));
+    const per = periods[cur], cx = x(cur);
+    cross.setAttribute("x1", cx); cross.setAttribute("x2", cx); cross.setAttribute("visibility", "visible");
+    const rows = [{ title: per }];
+    PARTIES.forEach(([p, n, col], k) => {
+      const q = look[p][per];
+      if (!q) { dots[k].setAttribute("visibility", "hidden"); return; }
+      dots[k].setAttribute("cx", cx); dots[k].setAttribute("cy", y(q.mean)); dots[k].setAttribute("visibility", "visible");
+      rows.push({ color: col, value: fmt(q.mean), label: `${n}　${fmt(q.lo)} 至 ${fmt(q.hi)}　${q.n} 篇` });
+    });
+    const tip = tooltip(c, rows, events.filter(e => e.period === per));
+    const sb = svg.getBoundingClientRect(), cb = c.getBoundingClientRect();
+    place(tip, c, clientX != null ? clientX - cb.left : cx / W * sb.width + sb.left - cb.left, sb.top - cb.top + 8);
+  };
+  const off = () => { cross.setAttribute("visibility", "hidden"); dots.forEach(d => d.setAttribute("visibility", "hidden")); hide(c); };
+  hit.addEventListener("pointermove", ev => {
+    const sb = svg.getBoundingClientRect(), vx = (ev.clientX - sb.left) / sb.width * W;
+    show(Math.round((vx - PAD.l) / (W - PAD.l - PAD.r) * span), ev.clientX);
+  });
+  hit.addEventListener("pointerleave", off);
+  svg.addEventListener("focus", () => show(cur));
+  svg.addEventListener("blur", off);
+  svg.addEventListener("keydown", ev => {
+    const step = { ArrowLeft: -1, ArrowRight: 1, PageUp: -12, PageDown: 12 }[ev.key];
+    if (ev.key === "Home") show(0); else if (ev.key === "End") show(periods.length - 1); else if (step) show(cur + step); else return;
+    ev.preventDefault();
+  });
+  const n = PARTIES.reduce((a, [p]) => a + (series[p] || []).filter(q => q.period in pos).reduce((b, q) => b + q.n, 0), 0);
+  const foot = div("muted", c);
+  foot.textContent = `篇次 ${n.toLocaleString()}` + (events.length ? `　·　事件 ${events.length}` : "");
+  return c;
+}
+
+function render() {
+  const { periods, by, events } = slice();
+  const rows = averages(by);
+  dumbbell(rows);
+  const grid = document.getElementById("grid");
+  grid.replaceChildren(...rows.map(r => card(r.outlet, by[r.outlet], events[r.outlet] || [], periods)));
+}
+
+document.getElementById("range").addEventListener("click", ev => {
+  const b = ev.target.closest("button");
+  if (!b) return;
+  RANGE = b.dataset.range;
+  for (const x of document.querySelectorAll("#range button")) x.setAttribute("aria-pressed", x === b);
+  render();
+});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => DATA && render());
+let lastW = 0;
+new ResizeObserver(() => {
+  const w = document.getElementById("dumbbell").clientWidth;
+  if (DATA && Math.abs(w - lastW) > 8) { lastW = w; dumbbell(averages(slice().by)); }
+}).observe(document.getElementById("dumbbell"));
+
 fetch("data/trends.json").then(r => r.json()).then(d => {
-  const periods = [...new Set(d.series.flatMap(s => s.points.map(p => p.period)))].sort();
-  const byOutlet = {};
-  for (const s of d.series) (byOutlet[s.outlet] ??= []).push(s);
-  const order = Object.keys(byOutlet).sort((a, b) => d.outlets[a].localeCompare(d.outlets[b], "zh-Hant"));
-  document.getElementById("grid").innerHTML = order.map(o => {
-    const n = byOutlet[o].reduce((m, s) => m + s.points.reduce((k, p) => k + p.n, 0), 0);
-    return `<div class="card"><h3>${d.outlets[o]}</h3>${chart(byOutlet[o], periods)}<div class="muted">標註篇次：${n}</div></div>`;
-  }).join("");
+  DATA = d;
+  render();
+  const last = [...new Set(d.week.series.flatMap(s => s.points.map(p => p.period)))].sort().at(-1);
   document.getElementById("status").textContent =
-    `試行版：目前只有 ${periods[0]} 到 ${periods.at(-1)} 的資料、單一或少數模型，數字隨時會變，不能當成結論。完整的 2012–2026 結果預計 2026 年 12 月中上線。`;
+    `資料涵蓋 2012 年 1 月至 ${d.generated}（最新一週 ${last}）。分數由決策模型 ${d.model} 計算；最近一期仍在收集，數字會隨新文章更新。`;
   document.getElementById("generated").textContent = `資料更新：${d.generated}`;
 }).catch(() => { document.getElementById("status").textContent = "資料載入失敗。"; });
 </script>
