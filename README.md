@@ -14,9 +14,9 @@
 
 This project measures how 12 Taiwanese news outlets present the Kuomintang (KMT) and the Democratic Progressive Party (DPP), month by month from 2012 to 2026, with uncertainty intervals, using only public data and methods anyone can rerun.
 
-No article is labelled by hand. A large language model (LLM), Gemini 3.8 Flash, reads about 14,000 articles without seeing the outlet's name and scores each party from −2 (very negative) to +2 (very positive). A small Chinese text model is then trained to imitate those scores, and it scores the remaining articles: 269,609 so far, of which 190,144 are political. A random-walk model smooths each outlet's monthly averages.
+A large language model (LLM), Gemini 3.8 Flash, reads about 14,000 articles without seeing the outlet's name and scores each party from −2 (very negative) to +2 (very positive). A small Chinese text model is then trained to imitate those scores, and it scores the remaining articles: 269,609 so far, of which 190,144 are political. A random-walk model smooths each outlet's monthly averages.
 
-Because there are no human labels, the labels are checked in other ways. Each party's own press releases should read as positive for that party, and they do: 90% of KMT releases and 94% of DPP releases. Swapping the party names in an article should swap the scores; the leftover effect is 0.07 points on a 4-point scale. Three other models from different companies rank the outlets almost the same way (rank correlation 0.96–0.99).
+The labels are checked in several ways. Each party's own press releases should read as positive for that party, and they do: 90% of KMT releases and 94% of DPP releases. Swapping the party names in an article should swap the scores; the leftover effect is 0.07 points on a 4-point scale. Three other models from different companies rank the outlets almost the same way (rank correlation 0.96–0.99).
 
 The outlets spread from FTV News (DPP more favourable by 1.36 points in 2024–26) to China Times and The Storm Media (KMT more favourable by 0.64).
 
@@ -27,7 +27,7 @@ The outlets spread from FTV News (DPP more favourable by 1.36 points in 2024–2
 3. [Data](#3-data)
 4. [Labelling with a language model](#4-labelling-with-a-language-model)
 5. [The decision model](#5-the-decision-model)
-6. [Checking the labels without human annotation](#6-checking-the-labels-without-human-annotation)
+6. [Checking the labels](#6-checking-the-labels)
 7. [Trends over time](#7-trends-over-time)
 8. [Watching the 2026 election](#8-watching-the-2026-election)
 9. [What did not work](#9-what-did-not-work)
@@ -54,7 +54,7 @@ The two parties are scored separately, not on one blue–green axis. An outlet c
 
 ### 1.2 Why it is hard
 
-1. **There is no answer key.** Nobody has scored hundreds of thousands of Taiwanese articles. Asking people to label them would also put the labellers' own political views into the data, which is exactly what is being measured.
+1. **There is no answer key.** Nobody has scored hundreds of thousands of Taiwanese articles for how they present each party.
 2. **Scale.** Twelve outlets over fifteen years is far too much text to read, or even to send to a large model at a reasonable cost.
 3. **Incomplete archives.** Outlets keep their old articles for different lengths of time, and the Internet Archive holds only part of the rest, so some outlets start later than 2012 (Table 3.1).
 4. **Who governs matters.** The party in government is the subject of most policy news and receives most criticism. The KMT governed until May 2016, the DPP since then, so part of any change across 2016 reflects the change of government rather than of the outlet.
@@ -118,8 +118,9 @@ The two parties are scored separately, not on one blue–green axis. An outlet c
 | Public Television Service (PTS) | 公視 | 2012 | own site |
 | The Storm Media | 風傳媒 | 2014 | own site |
 | Mirror Media | 鏡週刊 | 2016-11 | Internet Archive |
+| CTi News (added 12 Nov 2026) | 中天 | 2026-01 | own site's monthly sitemaps; earlier years on the Internet Archive are being checked |
 
-**Table 3.1.** The 12 outlets. Details in [docs/collection-status.md](docs/collection-status.md) and [docs/archive-url-schemes.md](docs/archive-url-schemes.md).
+**Table 3.1.** The outlets. CTi News was added on 12 November 2026 and is not yet in the results; its cable channel lost its licence in December 2020, and its news site keeps lists of articles only from January 2026. Details in [docs/collection-status.md](docs/collection-status.md) and [docs/archive-url-schemes.md](docs/archive-url-schemes.md).
 
 ### 3.2 Two ways of collecting
 
@@ -146,6 +147,8 @@ Each article is sent to the model with a fixed codebook ([docs/codebook.md](docs
 - whether the article is about Taiwanese politics;
 - its genre and main topic;
 - for each of the three parties: whether it is mentioned, how prominent it is (0–3), whether its people are quoted, and its stance (−2 to +2).
+
+**Why a language model.** The author did not label articles by hand, for two reasons: the author's own labels could carry personal political leanings, which is what the study measures, and one person cannot label tens of thousands of articles. Language models from several different companies and model families were used instead, so that they can be checked against each other.
 
 The main labeller (the "teacher") is **Gemini 3.8 Flash**, run as Google Cloud Vertex AI batch jobs. It labelled 13,920 news articles and press releases for training, balanced across outlets and periods. It also labels a sample of live articles every week (§8.1).
 
@@ -195,9 +198,9 @@ On outlet × period cells with at least 30 articles per party (38 cells), the mo
 
 ---
 
-## 6. Checking the labels without human annotation
+## 6. Checking the labels
 
-Human labels were deliberately not used, so that the researcher's own judgement does not decide what counts as positive or negative. The labels are checked against things that can be rerun by anyone.
+The labels are checked against things that anyone can rerun.
 
 ### 6.1 Known-stance anchors
 
@@ -458,9 +461,9 @@ The code is under the [MIT licence](LICENSE). The derived data and model will ca
 
 本專案量化台灣 12 家新聞媒體 2012 至 2026 年間每個月如何呈現國民黨與民進黨，附不確定區間，只用公開資料與任何人都能重跑的方法。
 
-沒有任何一篇文章是人工標註的。大型語言模型（LLM）Gemini 3.8 Flash 在看不到媒體名稱的情況下讀約 1.4 萬篇文章，替每個政黨打 −2（很負面）到 +2（很正面）的分數。接著訓練一個小型中文模型模仿這些分數，由它替其餘文章評分：目前共 269,609 篇，其中 190,144 篇是政治新聞。最後用隨機漫步模型平滑每家媒體的月平均。
+大型語言模型（LLM）Gemini 3.8 Flash 在看不到媒體名稱的情況下讀約 1.4 萬篇文章，替每個政黨打 −2（很負面）到 +2（很正面）的分數。接著訓練一個小型中文模型模仿這些分數，由它替其餘文章評分：目前共 269,609 篇，其中 190,144 篇是政治新聞。最後用隨機漫步模型平滑每家媒體的月平均。
 
-因為沒有人工標籤，改用其他方式檢查。各黨自己的新聞稿應該被判為對自己有利，實際上國民黨新聞稿判對 90%、民進黨新聞稿判對 94%。把文章中的黨名對調，分數應該跟著對調，剩下的偏差是 4 分量尺上的 0.07 分。另外三個不同公司的模型對媒體的排序幾乎相同（排名相關 0.96–0.99）。
+標籤用幾種方式檢查。各黨自己的新聞稿應該被判為對自己有利，實際上國民黨新聞稿判對 90%、民進黨新聞稿判對 94%。把文章中的黨名對調，分數應該跟著對調，剩下的偏差是 4 分量尺上的 0.07 分。另外三個不同公司的模型對媒體的排序幾乎相同（排名相關 0.96–0.99）。
 
 各媒體的位置從民視（2024–26 年民進黨較受正面呈現，差 1.36 分）分布到中國時報與風傳媒（國民黨較受正面呈現，差 0.64 分）。
 
@@ -471,7 +474,7 @@ The code is under the [MIT licence](LICENSE). The derived data and model will ca
 3. [資料](#3-資料)
 4. [用語言模型標註](#4-用語言模型標註)
 5. [決策模型](#5-決策模型)
-6. [不靠人工標註的檢驗](#6-不靠人工標註的檢驗)
+6. [標籤的檢驗](#6-標籤的檢驗)
 7. [隨時間的變化](#7-隨時間的變化)
 8. [觀測 2026 年選舉](#8-觀測-2026-年選舉)
 9. [沒有用的做法](#9-沒有用的做法)
@@ -498,7 +501,7 @@ The code is under the [MIT licence](LICENSE). The derived data and model will ca
 
 ### 1.2 為什麼難
 
-1. **沒有標準答案。** 沒有人替數十萬篇台灣新聞打過分。請人標註，又會把標註者自己的政治立場帶進資料，而這正是要量測的東西。
+1. **沒有標準答案。** 沒有人替數十萬篇台灣新聞，就各政黨被呈現的方式打過分。
 2. **規模。** 12 家媒體、15 年的文章，多到不可能全部讀完，也無法以合理成本全部送給大型模型。
 3. **存檔不完整。** 各家保留舊文章的時間不同，Internet Archive 也只存了一部分，所以有些媒體晚於 2012 年才有資料（表 3.1）。
 4. **誰執政有影響。** 執政黨是多數政策新聞的主角，也承受多數批評。2016 年 5 月以前由國民黨執政，之後由民進黨執政，所以跨過 2016 年的變化，一部分反映的是政黨輪替，而不是媒體本身。
@@ -562,8 +565,9 @@ The code is under the [MIT licence](LICENSE). The derived data and model will ca
 | 公視 | 2012 | 自家網站 |
 | 風傳媒 | 2014 | 自家網站 |
 | 鏡週刊 | 2016-11 | Internet Archive |
+| 中天（2026-11-12 加入） | 2026-01 | 自家網站的每月 sitemap；更早的年份正在檢查 Internet Archive |
 
-**表 3.1** 12 家媒體。細節見 [docs/collection-status.md](docs/collection-status.md) 與 [docs/archive-url-schemes.md](docs/archive-url-schemes.md)。
+**表 3.1** 各家媒體。中天於 2026 年 11 月 12 日加入，尚未納入結果；中天新聞台在 2020 年 12 月失去執照，中天新聞網的文章清單只回溯到 2026 年 1 月。細節見 [docs/collection-status.md](docs/collection-status.md) 與 [docs/archive-url-schemes.md](docs/archive-url-schemes.md)。
 
 ### 3.2 兩種收集方式
 
@@ -590,6 +594,8 @@ The code is under the [MIT licence](LICENSE). The derived data and model will ca
 - 這篇是否與台灣政治有關；
 - 文章類型與主要議題；
 - 三個政黨各自是否被提及、份量（0–3）、是否直接引述該黨人士、立場（−2 到 +2）。
+
+**為什麼用語言模型。** 作者沒有自己動手標註，原因有兩個：作者擔心自己的標註會帶入個人的主觀政治傾向，而這正是本研究要量測的東西；一個人的人力也不足以標註數萬篇文章。因此改用語言模型，並找來不同公司、不同家族的模型，彼此對照檢查。
 
 主要的標註模型（下稱「老師」）是 **Gemini 3.8 Flash**，以 Google Cloud Vertex AI 批次工作執行。它標了 13,920 篇新聞與新聞稿作為訓練資料，在各媒體與各時期之間平衡抽樣。選舉期間，它每週也標一批即時文章（第 8.1 節）。
 
@@ -639,9 +645,9 @@ x = c + d\,t \quad\Rightarrow\quad \text{校正分數} = \frac{x - c}{d} \qquad 
 
 ---
 
-## 6. 不靠人工標註的檢驗
+## 6. 標籤的檢驗
 
-本專案刻意不用人工標註，避免由研究者自己的判斷決定什麼算正面、什麼算負面。標籤改用任何人都能重跑的方式檢驗。
+標籤用任何人都能重跑的方式檢驗。
 
 ### 6.1 已知立場錨點
 

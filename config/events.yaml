@@ -9,7 +9,8 @@
 #     chair is the closest thing to a controller
 #   Not included: rows marked 背景 or 脈絡, failed or rejected acquisitions, licensing, court rulings and fines,
 #   disputes, board seats, foundings (a series simply starts), and entities outside the analysis set
-#   (中天, 中視, 壹電視, 鏡電視, 中嘉).
+#   (中視, 壹電視, 鏡電視, 中嘉). 中天 joined the analysis set on 2026-11-12; its 2020-12 licence non-renewal is
+#   licensing and so is not an event under these rules.
 #
 # The fit without events is kept (fit_trends.py --no-events); Method F's event studies read that one, so a shift
 # found there was not made possible by this file (docs/trend-model.md).

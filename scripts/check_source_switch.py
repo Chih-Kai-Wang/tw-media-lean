@@ -39,7 +39,7 @@ NAME = {"KMT": "國民黨", "DPP": "民進黨"}
 # Live records carry the URL and the site's category; these match each outlet's history rule (config/sources.yaml).
 LIVE_URL = {"ltn": r"/news/politics/", "udn": r"/story/6656/", "ebc": r"/news/politics/", "tvbs": r"/politics/",
             "cna": r"/news/aipl/"}
-LIVE_CAT = {"ettoday": "政治", "setn": "政治", "chinatimes": "政治", "ftv": "政治", "pts": "政治", "mirror": "政治"}
+LIVE_CAT = {"ettoday": "政治", "setn": "政治", "chinatimes": "政治", "ftv": "政治", "pts": "政治", "mirror": "政治", "ctinews": "要聞"}
 
 
 def stances(d: dict) -> dict[str, float]:

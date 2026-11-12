@@ -148,6 +148,21 @@ outlets:
       first: 2014-01
       url_pattern: /article/\d+
       political_breadcrumb: /channel/7(\D|$)
+  ctinews:
+    name: 中天
+    # 中天新聞網 (ctinews.com), the news site of CTi after its cable news channel lost its licence (2020-12).
+    # robots.txt (2026-03-30) disallows only /api, /videos, /search and account pages; checked 2026-11-12.
+    sitemap: https://ctinews.com/rss/sitemap-news.xml
+    history:  # monthly article sitemaps from 2026-01; article IDs are random strings, so no ID sampling.
+      # Earlier years: ctinews.com items are on Wayback from 2024-07 and 中天快點TV (gotv.ctitv.com.tw, now
+      # offline) from 2013-12; not yet configured. No politics section: 要聞 is the closest (political news and
+      # other headlines), so keywords decide within it, as for 中國時報 2012-2013.
+      method: sitemap_month
+      template: https://ctinews.com/rss/sitemap-articles-{month:%Y-%m}.xml
+      first: 2026-01
+      url_pattern: /news/items/\w+$
+      political_section: [要聞]
+      political_text: true
   mirror:
     name: 鏡週刊
     sitemap: https://www.mirrormedia.mg/rss/posts-news.xml
