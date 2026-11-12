@@ -112,7 +112,7 @@ The two parties are scored separately, not on one blue–green axis. An outlet c
 | ETtoday | ETtoday | 2012 | own site |
 | TVBS | TVBS | 2013 | own site |
 | SET News | 三立 | 2013-10 | own site |
-| FTV News | 民視 | 2012 | own site |
+| FTV News | 民視 | 2012 | Internet Archive to 2017; own site from 2019; no 2018 |
 | EBC News | 東森 | 2018-03 | own site |
 | Public Television Service (PTS) | 公視 | 2012 | own site |
 | The Storm Media | 風傳媒 | 2014 | own site |
@@ -329,7 +329,7 @@ The website shows every outlet and party month by month, with intervals and even
 | China Times 中國時報 | +0.14 | +0.47 | +0.73 | +0.64 |
 | The Storm Media 風傳媒 | −0.07 | +0.17 | +0.60 | +0.64 |
 
-**Table 10.1.** KMT score minus DPP score (positive: the KMT is presented more favourably). Each value is the smoothed monthly mean, weighted by articles, from the decision model v1 trend fit of 11 November 2026. The fit covers 117,728 political articles mentioning the KMT and 130,392 mentioning the DPP. "—" means fewer than 30 articles. The last column stops at September 2026, before the data boundary of §8.2. United Daily News 2012–15 covers 2015 only.
+**Table 10.1.** KMT score minus DPP score (positive: the KMT is presented more favourably). Each value is the smoothed monthly mean, weighted by articles, from the decision model v1 trend fit of 11 November 2026. The fit covers 117,728 political articles mentioning the KMT and 130,392 mentioning the DPP. "—" means fewer than 30 articles. The last column stops at September 2026, before the data boundary of §8.2. United Daily News 2012–15 covers 2015 only. FTV News changes source between 2017 (Internet Archive) and 2019 (its own site), and its score drops by about 0.7 across that gap; how much of the drop is the change of source is not yet known.
 
 Read the table with these points in mind:
 
@@ -541,7 +541,7 @@ The code is under the [MIT licence](LICENSE). The derived data and model will ca
 | ETtoday | 2012 | 自家網站 |
 | TVBS | 2013 | 自家網站 |
 | 三立 | 2013-10 | 自家網站 |
-| 民視 | 2012 | 自家網站 |
+| 民視 | 2012 | 2017 年以前用 Internet Archive；2019 年起用自家網站；缺 2018 年 |
 | 東森 | 2018-03 | 自家網站 |
 | 公視 | 2012 | 自家網站 |
 | 風傳媒 | 2014 | 自家網站 |
@@ -758,7 +758,7 @@ x = c + d\,t \quad\Rightarrow\quad \text{校正分數} = \frac{x - c}{d} \qquad 
 | 中國時報 | +0.14 | +0.47 | +0.73 | +0.64 |
 | 風傳媒 | −0.07 | +0.17 | +0.60 | +0.64 |
 
-**表 10.1** 國民黨分數減民進黨分數（正值：國民黨被呈現得較正面）。每個數值是平滑後的月平均，依篇數加權，取自決策模型 v1 於 2026 年 11 月 11 日的趨勢擬合；涵蓋提到國民黨的政治新聞 117,728 篇、提到民進黨的 130,392 篇。「—」表示少於 30 篇。最後一欄到 2026 年 9 月為止，在第 8.2 節的資料分界之前。聯合報 2012–15 只有 2015 年。
+**表 10.1** 國民黨分數減民進黨分數（正值：國民黨被呈現得較正面）。每個數值是平滑後的月平均，依篇數加權，取自決策模型 v1 於 2026 年 11 月 11 日的趨勢擬合；涵蓋提到國民黨的政治新聞 117,728 篇、提到民進黨的 130,392 篇。「—」表示少於 30 篇。最後一欄到 2026 年 9 月為止，在第 8.2 節的資料分界之前。聯合報 2012–15 只有 2015 年。民視在 2017 年（Internet Archive）與 2019 年（自家網站）之間換了資料來源，分數在這個缺口前後下降約 0.7；其中多少來自來源改變，目前還不知道。
 
 讀這張表時請注意：
 
