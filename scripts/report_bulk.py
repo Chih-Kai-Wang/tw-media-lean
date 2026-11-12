@@ -58,7 +58,7 @@ def main(model: str = "gemini-3.8-flash") -> None:
     m = meta()
     L = [f"# 第一批大量標註結果\n\n日期：{date.today().isoformat()}　模型：`{model}`（Vertex AI 批次）　codebook v0.1　"
          "程式：`scripts/vertex_batch.py`、`scripts/report_bulk.py`\n",
-         "只有一個模型的標註，其他陪審員還沒加入；以下用來檢查標註是否可信，以及看出初步的模式，不是最終結論。\n"]
+         "只有一個模型的標註，其他陪審員還沒加入；以下用來檢查標註是否可信，以及看出初步的模式。\n"]
 
     # 1. anchors by year
     anc = labels(f"vertex_{model}_anchors.jsonl")

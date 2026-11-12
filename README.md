@@ -4,7 +4,7 @@
 
 [English](#english) · [繁體中文](#繁體中文)
 
-> **Status, 12 November 2026.** These are early results. Observation of the 28 November 2026 local elections continues until 28 December, and the election-period numbers may change after the decision model is recalibrated (§8). The scores describe how news reports present each party, not which party anyone should vote for.
+> **Status, 12 November 2026.** These are early results. Observation of the 28 November 2026 local elections continues until 28 December, and the election-period numbers may change after the decision model is recalibrated (§8). The scores describe how news reports present each party.
 
 ---
 
@@ -50,14 +50,14 @@ Taiwanese readers often describe outlets as "blue" (closer to the KMT) or "green
 
 > In articles that mention a party, how positively or negatively is that party presented, and how has this changed since 2012?
 
-The two parties are scored separately, not on one blue–green axis. An outlet can be harsh on both, or kind to both. The third party, the Taiwan People's Party (TPP), is labelled too, but its scores are not yet reliable enough to publish (§5.3).
+The two parties are scored separately, each on its own scale. An outlet can be harsh on both, or kind to both. The third party, the Taiwan People's Party (TPP), is labelled too, but its scores are not yet reliable enough to publish (§5.3).
 
 ### 1.2 Why it is hard
 
 1. **There is no answer key.** Nobody has scored hundreds of thousands of Taiwanese articles for how they present each party.
 2. **Scale.** Twelve outlets over fifteen years is far too much text to read, or even to send to a large model at a reasonable cost.
 3. **Incomplete archives.** Outlets keep their old articles for different lengths of time, and the Internet Archive holds only part of the rest, so some outlets start later than 2012 (Table 3.1).
-4. **Who governs matters.** The party in government is the subject of most policy news and receives most criticism. The KMT governed until May 2016, the DPP since then, so part of any change across 2016 reflects the change of government rather than of the outlet.
+4. **Who governs matters.** The party in government is the subject of most policy news and receives most criticism. The KMT governed until May 2016, the DPP since then, so part of any change across 2016 reflects the change of government.
 
 ### 1.3 Our approach
 
@@ -88,7 +88,7 @@ The two parties are scored separately, not on one blue–green axis. An outlet c
 
 ## 2. Background
 
-**Stance.** For each article and each party it mentions, the label is an integer from −2 (strongly negative) to +2 (strongly positive), with 0 for neutral or balanced. The rules are in [docs/codebook.md](docs/codebook.md). The key rule is that the label describes how the article presents the party, not whether the event itself is good or bad: a scandal reported plainly, with the party's response, is −1, not −2.
+**Stance.** For each article and each party it mentions, the label is an integer from −2 (strongly negative) to +2 (strongly positive), with 0 for neutral or balanced. The rules are in [docs/codebook.md](docs/codebook.md). The key rule is that the label describes how the article presents the party: a scandal reported plainly, with the party's response, is −1; the same scandal told in loaded words and from one side only is −2.
 
 **Outlet score.** An outlet's score for a party in a period is the mean stance over its articles that mention the party. The summary used below is the KMT score minus the DPP score: positive means the KMT is presented more favourably than the DPP.
 
@@ -204,7 +204,7 @@ The labels are checked against things that anyone can rerun.
 
 ### 6.1 Known-stance anchors
 
-A party's own press releases should present that party positively. Over 2012–2026, the teacher scored the party itself as positive in 893 of 996 KMT releases (90%) and 924 of 988 DPP releases (94%), in years of both governments ([docs/bulk-annotation.md](docs/bulk-annotation.md)). Press releases are clearer than news, so this is an upper bound on accuracy, not an estimate of it.
+A party's own press releases should present that party positively. Over 2012–2026, the teacher scored the party itself as positive in 893 of 996 KMT releases (90%) and 924 of 988 DPP releases (94%), in years of both governments ([docs/bulk-annotation.md](docs/bulk-annotation.md)). Press releases are clearer than news, so this is an upper bound on accuracy.
 
 ### 6.2 Party-swap test
 
@@ -294,7 +294,7 @@ Most outlets' KMT scores step up between September (historical sample) and Octob
 
 **Table 8.2.** Why the trends step up at the boundary.
 
-The step across this boundary is therefore **not** evidence that outlets changed their stance. The website says so next to the charts. The historical sample is now also being drawn for October 2026, so the two ways of collecting can be compared on the same month.
+Most of the step across this boundary is therefore explained by the data and the model. The website says so next to the charts. The historical sample is now also being drawn for October 2026, so the two ways of collecting can be compared on the same month.
 
 ---
 
@@ -303,11 +303,11 @@ The step across this boundary is therefore **not** evidence that outlets changed
 | Idea | Result | Our explanation |
 |---|---|---|
 | Decision model v0, raw expected stance | slope 0.45–0.57; cells shifted by −0.18 to −0.21 | Expected values pull toward the middle, and noise in the teacher's labels flattens the slope. Rebalancing the data did not fix it; calibration did (v1). |
-| Calibrating by predicting the teacher from the model | the slope got smaller, not larger | That fit minimises error on each article and so shrinks averages toward the mean. We use the inverse fit (5.2). |
+| Calibrating by predicting the teacher from the model | the slope got smaller | That fit minimises error on each article and so shrinks averages toward the mean. We use the inverse fit (5.2). |
 | TPP stance from the decision model | slope 0.51 before calibration; errors on single articles of 0.66 after | Too few training articles mention the TPP. TPP stays with the LLM labels. |
 | Word-based method as an outlet ranking | rankings disagree between legislative terms (−0.22 to 0.50) | Written questions carry few partisan words, news is short, and character n-grams are coarse. Kept as a weak check. |
 | Refitting the stance calibration on live weeks | held-out shift unchanged or worse | The live shift varies from week to week; a fixed linear map cannot follow it. |
-| Gemini 3.5 Flash-Lite as a juror | only 78% of press releases correct | Used only for ranking checks, not as a juror. |
+| Gemini 3.5 Flash-Lite as a juror | only 78% of press releases correct | Used only for ranking checks. |
 | Facebook, Threads, Dcard, TikTok | not collected | Login walls, robots.txt bans, bot checks, or research access limited to other regions or to institutions. We did not get around any of them. |
 
 **Table 9.1.** Ideas we tested and rejected.
@@ -337,7 +337,7 @@ The website shows every outlet and party month by month, with intervals and even
 
 Read the table with these points in mind:
 
-- **It is a position on a defined scale**: how favourably articles present each party, as judged by a language model. It is not an outlet's self-description, and it says nothing about accuracy or quality.
+- **It is a position on a defined scale**: how favourably articles present each party, as judged by a language model. It measures presentation only.
 - **The labels come from one LLM**, checked as in §6. The ranking holds across four models, but some outlets depend on the model, for example Liberty Times and PTS (§6.3).
 - **The labeller favours the KMT label by about 0.07** for the same content (§6.2). This is not subtracted from the table.
 - **Government and opposition.** The KMT governed in 2012–15 and the DPP from 2016. Most outlets move toward the KMT after 2016, and part of that is the general tendency to criticise whoever governs.
@@ -348,10 +348,10 @@ Read the table with these points in mind:
 [docs/findings.md](docs/findings.md) lists patterns beyond the ranking. They use the historical sample only (to September 2026), and are checked against the teacher's own labels and against a fixed set of six outlets present every year.
 
 1. **Outlets lean mainly by covering the other party badly.** The KMT-leaning outlets are about neutral on the KMT; their gap comes almost entirely from negative DPP coverage (China Times: KMT +0.01, DPP −0.62). The DPP-leaning outlets are clearly negative on the KMT and only mildly positive on the DPP (FTV News: −1.03 and +0.33). No outlet presents the KMT clearly positively on average.
-2. **It is not topic choice.** Giving every outlet the same mix of topics changes no outlet's gap by more than 0.05, and the outlets are about as far apart within every topic.
+2. **The lean holds within every topic.** Giving every outlet the same mix of topics changes no outlet's gap by more than 0.05, and the outlets are about as far apart within every topic.
 3. **Opinion pieces lean 1.4–3 times more than news, again through the other party.** Under the teacher's labels, most of The Storm Media's lean comes from its commentary.
-4. **The outlets drew apart around 2018–2019, not at the 2016 change of government.** Among the six outlets, the spread of KMT − DPP was 0.3–0.4 in 2014–2017 and 0.55–0.70 from 2019.
-5. **The governing party is presented worse.** The average gap moved by about 0.3 between KMT and DPP government, about 0.15 per party, gradually rather than in one step.
+4. **The outlets drew apart around 2018–2019, about three years after the 2016 change of government.** Among the six outlets, the spread of KMT − DPP was 0.3–0.4 in 2014–2017 and 0.55–0.70 from 2019.
+5. **The governing party is presented worse.** The average gap moved by about 0.3 between KMT and DPP government, about 0.15 per party, gradually over several years.
 6. **The model finds known events by itself.** The months in which all outlets moved together match, among others, the 2017 fight over the infrastructure budget, the August 2017 blackout and the June 2023 #MeToo cases.
 
 Two observations did not survive the checks: a peak of polarisation in July 2025 depends on which outlets are counted, and FTV News's drop between 2017 and 2019 coincides with its change of data source (Table 10.1).
@@ -455,7 +455,7 @@ The code is under the [MIT licence](LICENSE). The derived data and model will ca
 
 **公開、可重現的研究 · 程式碼、方法與初步結果 · [網站](https://chih-kai-wang.github.io/tw-media-lean/)**
 
-> **狀態（2026 年 11 月 12 日）**：這是初步結果。2026 年九合一選舉（11 月 28 日投票）的觀測持續到 12 月 28 日；決策模型重新校準後（第 8 節），選舉期間的數字可能改變。分數描述的是新聞怎麼呈現各政黨，不是建議任何人投給誰。
+> **狀態（2026 年 11 月 12 日）**：這是初步結果。2026 年九合一選舉（11 月 28 日投票）的觀測持續到 12 月 28 日；決策模型重新校準後（第 8 節），選舉期間的數字可能改變。分數描述的是新聞怎麼呈現各政黨。
 
 ## 摘要
 
@@ -497,14 +497,14 @@ The code is under the [MIT licence](LICENSE). The derived data and model will ca
 
 > 在提到某個政黨的文章裡，這個政黨被呈現得多正面或多負面？2012 年以來有什麼變化？
 
-兩個政黨分開評分，不壓成單一的藍綠軸。一家媒體可能對兩黨都嚴厲，也可能對兩黨都友善。民眾黨也有標註，但它的分數還不夠可靠，暫不公開（第 5.3 節）。
+兩個政黨各自評分，各有一條量尺。一家媒體可能對兩黨都嚴厲，也可能對兩黨都友善。民眾黨也有標註，但它的分數還不夠可靠，暫不公開（第 5.3 節）。
 
 ### 1.2 為什麼難
 
 1. **沒有標準答案。** 沒有人替數十萬篇台灣新聞，就各政黨被呈現的方式打過分。
 2. **規模。** 12 家媒體、15 年的文章，多到不可能全部讀完，也無法以合理成本全部送給大型模型。
 3. **存檔不完整。** 各家保留舊文章的時間不同，Internet Archive 也只存了一部分，所以有些媒體晚於 2012 年才有資料（表 3.1）。
-4. **誰執政有影響。** 執政黨是多數政策新聞的主角，也承受多數批評。2016 年 5 月以前由國民黨執政，之後由民進黨執政，所以跨過 2016 年的變化，一部分反映的是政黨輪替，而不是媒體本身。
+4. **誰執政有影響。** 執政黨是多數政策新聞的主角，也承受多數批評。2016 年 5 月以前由國民黨執政，之後由民進黨執政，所以跨過 2016 年的變化，一部分反映的是政黨輪替。
 
 ### 1.3 我們的做法
 
@@ -535,7 +535,7 @@ The code is under the [MIT licence](LICENSE). The derived data and model will ca
 
 ## 2. 背景知識
 
-**立場。** 每篇文章對提到的每個政黨，標一個 −2（強烈負面）到 +2（強烈正面）的整數，0 表示中立或正負平衡。規則在 [docs/codebook.md](docs/codebook.md)。最重要的原則是：標的是文章怎麼呈現該黨，不是事件本身好壞。平實報導一件醜聞、並給該黨回應空間，是 −1 而不是 −2。
+**立場。** 每篇文章對提到的每個政黨，標一個 −2（強烈負面）到 +2（強烈正面）的整數，0 表示中立或正負平衡。規則在 [docs/codebook.md](docs/codebook.md)。最重要的原則是：標的是文章怎麼呈現該黨：平實報導一件醜聞、並給該黨回應空間，是 −1；用帶情緒的字眼、只呈現單方說法，才是 −2。
 
 **媒體分數。** 某家媒體在某段期間對某黨的分數，是它提到該黨的文章的平均立場。下文使用的摘要是「國民黨分數減民進黨分數」：正值表示國民黨被呈現得比民進黨正面。
 
@@ -651,7 +651,7 @@ x = c + d\,t \quad\Rightarrow\quad \text{校正分數} = \frac{x - c}{d} \qquad 
 
 ### 6.1 已知立場錨點
 
-政黨自己的新聞稿應該對自己正面。2012–2026 年間，老師把 996 篇國民黨新聞稿中的 893 篇（90%）、988 篇民進黨新聞稿中的 924 篇（94%）判為對自己黨正面，兩黨執政期都是如此（[docs/bulk-annotation.md](docs/bulk-annotation.md)）。新聞稿比新聞立場鮮明，所以這是準確率的上限，不是估計值。
+政黨自己的新聞稿應該對自己正面。2012–2026 年間，老師把 996 篇國民黨新聞稿中的 893 篇（90%）、988 篇民進黨新聞稿中的 924 篇（94%）判為對自己黨正面，兩黨執政期都是如此（[docs/bulk-annotation.md](docs/bulk-annotation.md)）。新聞稿比新聞立場鮮明，所以這是準確率的上限。
 
 ### 6.2 政黨對調測試
 
@@ -741,7 +741,7 @@ x = c + d\,t \quad\Rightarrow\quad \text{校正分數} = \frac{x - c}{d} \qquad 
 
 **表 8.2** 趨勢在分界上往上跳的原因。
 
-所以跨過這個分界的變化，**不能**當作媒體改變立場的證據。網站在圖旁註明了這一點。目前也正用歷史抽樣補抽 2026 年 10 月，以便在同一個月比較兩種收集方式。
+所以跨過這個分界的變化，大部分可以由資料與模型解釋。網站在圖旁註明了這一點。目前也正用歷史抽樣補抽 2026 年 10 月，以便在同一個月比較兩種收集方式。
 
 ---
 
@@ -784,7 +784,7 @@ x = c + d\,t \quad\Rightarrow\quad \text{校正分數} = \frac{x - c}{d} \qquad 
 
 讀這張表時請注意：
 
-- **這是在定義好的量尺上的位置**：由語言模型判斷的、文章呈現各政黨的正負程度。它不是媒體的自我定位，也不涉及報導的正確性或品質。
+- **這是在定義好的量尺上的位置**：由語言模型判斷的、文章呈現各政黨的正負程度。它只衡量呈現方式。
 - **標籤來自單一 LLM**，並經過第 6 節的檢驗。排序在四個模型之間一致，但有些媒體的位置取決於模型，例如自由時報與公視（第 6.3 節）。
 - **標註模型對國民黨標籤約多給 0.07 分**（第 6.2 節）。表中沒有扣除。
 - **執政與在野。** 2012–15 年國民黨執政，2016 年起民進黨執政。多數媒體在 2016 年後往國民黨方向移動，其中一部分是「批評執政者」的一般傾向。
@@ -795,10 +795,10 @@ x = c + d\,t \quad\Rightarrow\quad \text{校正分數} = \frac{x - c}{d} \qquad 
 [docs/findings.md](docs/findings.md) 整理媒體排序以外的規律。只用歷史抽樣（到 2026 年 9 月），並用老師模型自己的標籤、以及每年都有資料的固定 6 家媒體重算檢查。
 
 1. **傾向主要來自對另一黨的負面報導。** 偏國民黨的媒體對國民黨大約中性，差距幾乎全來自對民進黨的負面報導（中國時報：國民黨 +0.01、民進黨 −0.62）。偏民進黨的媒體對國民黨明顯負面，對民進黨只是微幅正面（民視：−1.03 與 +0.33）。沒有一家媒體對國民黨的平均是明顯正面的。
-2. **不是議題選擇造成的。** 讓每家媒體套用同一個議題比例，差距的變化都不超過 0.05；在每個議題裡，媒體之間的距離也差不多大。
+2. **傾向在每個議題裡都存在。** 讓每家媒體套用同一個議題比例，差距的變化都不超過 0.05；在每個議題裡，媒體之間的距離也差不多大。
 3. **評論的傾向是新聞的 1.4 到 3 倍，同樣來自對另一黨更負面。** 老師標籤下，風傳媒的傾向大多來自評論。
-4. **媒體之間的距離在 2018–2019 年拉大，不是在 2016 年政黨輪替時。** 固定 6 家媒體「國民黨 − 民進黨」的標準差，2014–2017 年約 0.3–0.4，2019 年起為 0.55–0.70。
-5. **執政黨被呈現得較差。** 從國民黨執政到民進黨執政，平均差距移動約 0.3，相當於每黨約 0.15 分，而且是逐年移動，不是一次跳動。
+4. **媒體之間的距離在 2018–2019 年拉大，比 2016 年政黨輪替晚了約三年。** 固定 6 家媒體「國民黨 − 民進黨」的標準差，2014–2017 年約 0.3–0.4，2019 年起為 0.55–0.70。
+5. **執政黨被呈現得較差。** 從國民黨執政到民進黨執政，平均差距移動約 0.3，相當於每黨約 0.15 分，而且是逐年移動。
 6. **模型自己找到了已知事件。** 所有媒體一起偏離的月份，對得上 2017 年前瞻條例的立法院衝突、2017 年 8 月大停電、2023 年 6 月 #MeToo 事件等。
 
 有兩項觀察沒有通過檢查：2025 年 7 月的極化高峰取決於計入哪些媒體；民視 2017 到 2019 年間的下降與資料來源改變重疊（表 10.1）。

@@ -2,7 +2,7 @@
 
 調查日期：2026-11-01（第二輪 2026-11-02）。程式：`scripts/cdx_survey.py`；原始 CDX 回應與統計：`data/history_survey/`。
 
-> **更正（2026-11-02）**：中央社的 `aopl` 是「國際」不是政治（`aipl` 才是國內政治，`acn` 是兩岸），所以下表中央社的數字應讀為「政治＋國際」。實際的歷史回補改用 `twmedia history`，見 [collection-status.md](collection-status.md) 與 [archive-url-schemes.md](archive-url-schemes.md)。
+> **更正（2026-11-02）**：中央社的 `aopl` 是「國際」（國內政治是 `aipl`，`acn` 是兩岸），所以下表中央社的數字應讀為「政治＋國際」。實際的歷史回補改用 `twmedia history`，見 [collection-status.md](collection-status.md) 與 [archive-url-schemes.md](archive-url-schemes.md)。
 
 本文件為早期調查，各媒體網址結構與抽樣方法已由 [archive-url-schemes.md](archive-url-schemes.md) 取代；此處保留實測數字。調查期間 Internet Archive CDX 極不穩定（大量 504 與 `Temporarily Offline`），11 家中僅 4 家取得部分數字；「未量到」不等於沒有存檔，所有數字均為抽樣月份的下限或估計。
 
@@ -32,7 +32,7 @@
 
 ## 估計文章數（3 月抽樣網址數）
 
-格式：`3 月實測數 → 年推估`。「≥」為被 `limit` 截斷的下限；「未量到」為查詢 504／離線，**不是 0**；「0*」為查詢成功但回 0，多半是網址型態問題。
+格式：`3 月實測數 → 年推估`。「≥」為被 `limit` 截斷的下限；「未量到」為查詢 504／離線，數量未知；「0*」為查詢成功但回 0，多半是網址型態問題。
 
 | 媒體 | 2012 | 2013 | 2014 | 2015 |
 |---|---|---|---|---|
