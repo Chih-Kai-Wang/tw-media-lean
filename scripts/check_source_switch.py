@@ -33,6 +33,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 MODEL = "tw-media-lean-v1"
 TEACHER = "gemini-3.8-flash"
+YEARS = ("2014", "2018", "2022", "2026")  # local elections, all held in late November
 PARTIES = ("KMT", "DPP")
 NAME = {"KMT": "國民黨", "DPP": "民進黨"}
 # Live records carry the URL and the site's category; these match each outlet's history rule (config/sources.yaml).
@@ -79,7 +80,7 @@ def main() -> None:
             model[d["key"].split(":", 1)[1]] = d
     names = {k: v["name"] for k, v in yaml.safe_load((ROOT / "config" / "sources.yaml").read_text(encoding="utf-8"))["outlets"].items()}
 
-    switch, season, outlet_of = defaultdict(list), defaultdict(list), {}
+    switch, season, same, outlet_of = defaultdict(list), defaultdict(list), defaultdict(list), {}
     for f in glob.glob(str(ROOT / "data" / "raw" / "news_*" / "*.jsonl")) + glob.glob(str(ROOT / "data" / "raw" / "hist_*" / "*.jsonl")):
         kind, outlet = Path(f).parent.name.split("_", 1)
         outlet = outlet.removesuffix("_wb")
@@ -96,9 +97,12 @@ def main() -> None:
                 grp = live_section(outlet, r)
             else:
                 grp = None
-            if kind == "hist" and pub[:4] in ("2014", "2018", "2022") and pub[5:7] in ("08", "09", "10", "11"):
+            if kind == "hist" and pub[:4] in YEARS and pub[5:7] in ("08", "09", "10", "11"):
                 for p, v in s.items():
                     season[(pub[:4], outlet, p, "before" if pub[5:7] < "10" else "after")].append(v)
+            if pub == "2026-10" and (kind == "hist" or grp == "pol"):  # the same month through both pipelines
+                for p, v in s.items():
+                    same[(outlet, p, kind)].append(v)
             if grp:
                 for p, v in s.items():
                     switch[(outlet, p, grp)].append(v)
@@ -153,13 +157,25 @@ def main() -> None:
           "同一套歷史抽樣，10–11 月平均減 8–9 月平均（每家每期至少 20 篇），列出各媒體的中位數與範圍。"
           "這三年與 2026 年都在 11 月底投票，所以 10–11 月同樣是投票前最後兩個月。\n",
           "| 年 | 政黨 | 媒體數 | 中位數 | 範圍 |", "|---|---|---|---|---|"]
-    for y in ("2014", "2018", "2022"):
+    for y in YEARS:
         for p in PARTIES:
             v = [np.mean(season[(y, o, p, "after")]) - np.mean(season[(y, o, p, "before")])
                  for o in {k[1] for k in season if k[0] == y}
                  if len(season.get((y, o, p, "before"), [])) >= 20 and len(season.get((y, o, p, "after"), [])) >= 20]
             if v:
-                L.append(f"| {y} | {NAME[p]} | {len(v)} | {np.median(v):+.2f} | {min(v):+.2f} 至 {max(v):+.2f} |")
+                L.append(f"| {y if y != '2026' else '2026（歷史抽樣補到的月份）'} | {NAME[p]} | {len(v)} | {np.median(v):+.2f} | {min(v):+.2f} 至 {max(v):+.2f} |")
+
+    L += ["\n## 4. 同一個月，兩種收集方式\n",
+          "2026 年 10 月同時有歷史抽樣（事後補抽，政治版）與即時收集的政治版文章。差異 = 即時政治版平均 − 歷史抽樣平均；"
+          "兩者是同月份、同版面的不同文章，差異反映收集方式本身。\n",
+          "| 媒體 | 政黨 | 歷史抽樣 | 即時 政治版 | 差異 |", "|---|---|---|---|---|"]
+    pub4 = defaultdict(list)
+    for o in sorted({k[0] for k in same}, key=lambda o: names.get(o, o)):
+        for p in PARTIES:
+            h, n = same.get((o, p, "hist"), []), same.get((o, p, "news"), [])
+            if len(h) >= 20 and len(n) >= 20:
+                pub4[p].append((o, np.mean(n) - np.mean(h)))
+                L.append(f"| {names.get(o, o)} | {NAME[p]} | {fmt(h)} | {fmt(n)} | {np.mean(n) - np.mean(h):+.2f} |")
 
     L += ["\n## 判讀\n",
           "- **版面組成**：即時收集包含地方、社會等版面，那些版面的分數可能與政治版不同。聯合報最明顯：只看政治版，國民黨與 8–9 月幾乎相同，"
@@ -193,7 +209,12 @@ def main() -> None:
           "| 政黨 | 篇數 | 老師 | 模型 | 差異 |", "|---|---|---|---|---|", *pub2["KMT"], *pub2["DPP"],
           "\n各媒體的差異：", ]
     P[-1] += "；".join(f"{NAME[p]}中位數 {np.median([x for _, x in pub2[(p, 'outlets')]]):+.2f}（{min(x for _, x in pub2[(p, 'outlets')]):+.2f} 至 {max(x for _, x in pub2[(p, 'outlets')]):+.2f}）" for p in PARTIES) + "。\n"
-    P += [rest[rest.index("## 3."):rest.index("## 判讀")].rstrip() + "\n", interp]
+    P += [rest[rest.index("## 3."):rest.index("## 4.")].rstrip() + "\n"]
+    if pub4:
+        P += ["## 4. 同一個月，兩種收集方式\n",
+              "2026 年 10 月同時有歷史抽樣（事後補抽，政治版）與即時收集的政治版文章。差異 = 即時政治版平均 − 歷史抽樣平均。\n",
+              "| 項目 | 媒體數 | 中位數 | 範圍 |", "|---|---|---|---|"] + [summary(pub4[p], NAME[p]) for p in PARTIES if pub4[p]] + [""]
+    P += [interp]
     (ROOT / "docs" / "source-switch.md").write_text("\n".join(P), encoding="utf-8")
     print("\n".join(P))
 
