@@ -106,6 +106,17 @@
   <p class="muted">實線是平滑後的平均，色帶是 95% 可信區間；文章少或樣本不穩的時期區間較寬。灰色直線是事先列出的已知事件（政黨輪替、控制者或董事長變更），模型在那一期允許較大的變動，但不指定方向。把游標移到圖上、或用方向鍵，可看每期數字。</p>
   <div class="grid" id="grid"></div>
 
+  <h2>其他值得注意的規律</h2>
+  <ul>
+    <li><strong>傾向主要來自對另一黨的負面報導。</strong>偏國民黨的媒體對國民黨大約中性，差距幾乎全來自對民進黨的負面報導；偏民進黨的媒體對國民黨明顯負面，對民進黨只是微幅正面。沒有一家媒體對國民黨的平均是明顯正面的。</li>
+    <li><strong>不是議題選擇造成的。</strong>讓每家媒體套用同一個議題比例，差距幾乎不變；在每個議題裡，媒體之間的距離也差不多大。</li>
+    <li><strong>評論比新聞更偏</strong>，約是新聞的 1.4 到 3 倍，同樣是對另一黨更負面，而不是更稱讚自己人。</li>
+    <li><strong>媒體之間的距離在 2018–2019 年拉大</strong>，不是在 2016 年政黨輪替時。</li>
+    <li><strong>執政黨被呈現得較差</strong>：政黨輪替後，兩黨的相對位置移動約 0.3 分。比較同一家媒體不同執政期的分數時，要先考慮這一點。</li>
+    <li><strong>模型自己找到了已知事件</strong>：所有媒體一起偏離的月份，對得上前瞻條例的立法院衝突、2017 年大停電、2023 年 #MeToo 事件等。</li>
+  </ul>
+  <p class="muted">做法、數字與沒有通過檢查的觀察，見<a href="https://github.com/Chih-Kai-Wang/tw-media-lean/blob/main/docs/findings.md">其他規律</a>。</p>
+
   <h2>怎麼算的</h2>
   <ul>
     <li>約 1.4 萬篇新聞與政黨新聞稿先由大型語言模型 Gemini 3.8 Flash 依同一份<a href="https://github.com/Chih-Kai-Wang/tw-media-lean/blob/main/docs/codebook.md">標註規則</a>判斷，模型看不到媒體名稱。再用這些判斷訓練一個自己的中文決策模型，替其餘十多萬篇文章評分（<a href="https://github.com/Chih-Kai-Wang/tw-media-lean/blob/main/docs/decision-model.md">說明</a>）。另外三個不同公司的模型標了同一批 2,836 篇，各媒體的排序與 Gemini 幾乎相同（<a href="https://github.com/Chih-Kai-Wang/tw-media-lean/blob/main/docs/jury-agreement.md">陪審團一致性</a>）。</li>

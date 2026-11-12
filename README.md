@@ -32,6 +32,7 @@ The outlets spread from FTV News (DPP more favourable by 1.36 points in 2024–2
 8. [Watching the 2026 election](#8-watching-the-2026-election)
 9. [What did not work](#9-what-did-not-work)
 10. [Results](#10-results)
+   - [10.1 Other patterns](#101-other-patterns)
 11. [Not done yet](#11-not-done-yet)
 - [Appendix A. Reproducing the results](#appendix-a-reproducing-the-results)
 - [Appendix B. Where each part lives in the code](#appendix-b-where-each-part-lives-in-the-code)
@@ -329,7 +330,7 @@ The website shows every outlet and party month by month, with intervals and even
 | China Times 中國時報 | +0.14 | +0.47 | +0.73 | +0.64 |
 | The Storm Media 風傳媒 | −0.07 | +0.17 | +0.60 | +0.64 |
 
-**Table 10.1.** KMT score minus DPP score (positive: the KMT is presented more favourably). Each value is the smoothed monthly mean, weighted by articles, from the decision model v1 trend fit of 11 November 2026. The fit covers 117,728 political articles mentioning the KMT and 130,392 mentioning the DPP. "—" means fewer than 30 articles. The last column stops at September 2026, before the data boundary of §8.2. United Daily News 2012–15 covers 2015 only. FTV News changes source between 2017 (Internet Archive) and 2019 (its own site), and its score drops by about 0.7 across that gap; how much of the drop is the change of source is not yet known.
+**Table 10.1.** KMT score minus DPP score (positive: the KMT is presented more favourably). Each value is the smoothed monthly mean, weighted by articles, from the decision model v1 trend fit of 11 November 2026. The fit covers 117,728 political articles mentioning the KMT and 130,392 mentioning the DPP. "—" means fewer than 30 articles. The last column stops at September 2026, before the data boundary of §8.2. United Daily News 2012–15 covers 2015 only. FTV News changes source between 2017 (Internet Archive) and 2019 (its own site), and its score drops by about 0.6 across that gap; how much of the drop is the change of source is not yet known.
 
 Read the table with these points in mind:
 
@@ -338,6 +339,19 @@ Read the table with these points in mind:
 - **The labeller favours the KMT label by about 0.07** for the same content (§6.2). This is not subtracted from the table.
 - **Government and opposition.** The KMT governed in 2012–15 and the DPP from 2016. Most outlets move toward the KMT after 2016, and part of that is the general tendency to criticise whoever governs.
 - **Topics are not controlled.** An outlet that covers more scandals will score lower for the party involved.
+
+### 10.1 Other patterns
+
+[docs/findings.md](docs/findings.md) lists patterns beyond the ranking. They use the historical sample only (to September 2026), and are checked against the teacher's own labels and against a fixed set of six outlets present every year.
+
+1. **Outlets lean mainly by covering the other party badly.** The KMT-leaning outlets are about neutral on the KMT; their gap comes almost entirely from negative DPP coverage (China Times: KMT +0.01, DPP −0.62). The DPP-leaning outlets are clearly negative on the KMT and only mildly positive on the DPP (FTV News: −1.03 and +0.33). No outlet presents the KMT clearly positively on average.
+2. **It is not topic choice.** Giving every outlet the same mix of topics changes no outlet's gap by more than 0.05, and the outlets are about as far apart within every topic.
+3. **Opinion pieces lean 1.4–3 times more than news, again through the other party.** Under the teacher's labels, most of The Storm Media's lean comes from its commentary.
+4. **The outlets drew apart around 2018–2019, not at the 2016 change of government.** Among the six outlets, the spread of KMT − DPP was 0.3–0.4 in 2014–2017 and 0.55–0.70 from 2019.
+5. **The governing party is presented worse.** The average gap moved by about 0.3 between KMT and DPP government, about 0.15 per party, gradually rather than in one step.
+6. **The model finds known events by itself.** The months in which all outlets moved together match, among others, the 2017 fight over the infrastructure budget, the August 2017 blackout and the June 2023 #MeToo cases.
+
+Two observations did not survive the checks: a peak of polarisation in July 2025 depends on which outlets are counted, and FTV News's drop between 2017 and 2019 coincides with its change of data source (Table 10.1).
 
 ---
 
@@ -408,6 +422,7 @@ The website is the single file `docs/index.html`, served by GitHub Pages. To pre
 | §7 trends | `src/twmedia/trend.py`, `scripts/fit_trends.py`, `config/events.yaml` |
 | §8 election | `scripts/monitor_drift.py`, `recalibrate_stance.py`, `check_source_switch.py` |
 | §10 website | `scripts/export_site.py`, `docs/index.html` |
+| §10.1 other patterns | `scripts/findings.py` |
 | §11 money | `scripts/money/` |
 
 **Technical settings.** BERT base Chinese (CKIP), maximum 512 characters, 3 epochs, learning rate 3 × 10⁻⁵, batch 16. LLM labels come from Vertex AI batch prediction with JSON output. The trend model uses a Kalman filter and RTS smoother, with $\tau$ chosen on a grid by marginal likelihood and an event variance multiplier of 25.
@@ -461,6 +476,7 @@ The code is under the [MIT licence](LICENSE). The derived data and model will ca
 8. [觀測 2026 年選舉](#8-觀測-2026-年選舉)
 9. [沒有用的做法](#9-沒有用的做法)
 10. [結果](#10-結果)
+   - [10.1 其他規律](#101-其他規律)
 11. [還沒完成的部分](#11-還沒完成的部分)
 - [附錄 A 重現結果](#附錄-a-重現結果)
 - [附錄 B 各部分在程式碼中的位置](#附錄-b-各部分在程式碼中的位置)
@@ -758,7 +774,7 @@ x = c + d\,t \quad\Rightarrow\quad \text{校正分數} = \frac{x - c}{d} \qquad 
 | 中國時報 | +0.14 | +0.47 | +0.73 | +0.64 |
 | 風傳媒 | −0.07 | +0.17 | +0.60 | +0.64 |
 
-**表 10.1** 國民黨分數減民進黨分數（正值：國民黨被呈現得較正面）。每個數值是平滑後的月平均，依篇數加權，取自決策模型 v1 於 2026 年 11 月 11 日的趨勢擬合；涵蓋提到國民黨的政治新聞 117,728 篇、提到民進黨的 130,392 篇。「—」表示少於 30 篇。最後一欄到 2026 年 9 月為止，在第 8.2 節的資料分界之前。聯合報 2012–15 只有 2015 年。民視在 2017 年（Internet Archive）與 2019 年（自家網站）之間換了資料來源，分數在這個缺口前後下降約 0.7；其中多少來自來源改變，目前還不知道。
+**表 10.1** 國民黨分數減民進黨分數（正值：國民黨被呈現得較正面）。每個數值是平滑後的月平均，依篇數加權，取自決策模型 v1 於 2026 年 11 月 11 日的趨勢擬合；涵蓋提到國民黨的政治新聞 117,728 篇、提到民進黨的 130,392 篇。「—」表示少於 30 篇。最後一欄到 2026 年 9 月為止，在第 8.2 節的資料分界之前。聯合報 2012–15 只有 2015 年。民視在 2017 年（Internet Archive）與 2019 年（自家網站）之間換了資料來源，分數在這個缺口前後下降約 0.6；其中多少來自來源改變，目前還不知道。
 
 讀這張表時請注意：
 
@@ -767,6 +783,19 @@ x = c + d\,t \quad\Rightarrow\quad \text{校正分數} = \frac{x - c}{d} \qquad 
 - **標註模型對國民黨標籤約多給 0.07 分**（第 6.2 節）。表中沒有扣除。
 - **執政與在野。** 2012–15 年國民黨執政，2016 年起民進黨執政。多數媒體在 2016 年後往國民黨方向移動，其中一部分是「批評執政者」的一般傾向。
 - **沒有控制議題。** 較常報導醜聞的媒體，涉事政黨的分數會較低。
+
+### 10.1 其他規律
+
+[docs/findings.md](docs/findings.md) 整理媒體排序以外的規律。只用歷史抽樣（到 2026 年 9 月），並用老師模型自己的標籤、以及每年都有資料的固定 6 家媒體重算檢查。
+
+1. **傾向主要來自對另一黨的負面報導。** 偏國民黨的媒體對國民黨大約中性，差距幾乎全來自對民進黨的負面報導（中國時報：國民黨 +0.01、民進黨 −0.62）。偏民進黨的媒體對國民黨明顯負面，對民進黨只是微幅正面（民視：−1.03 與 +0.33）。沒有一家媒體對國民黨的平均是明顯正面的。
+2. **不是議題選擇造成的。** 讓每家媒體套用同一個議題比例，差距的變化都不超過 0.05；在每個議題裡，媒體之間的距離也差不多大。
+3. **評論的傾向是新聞的 1.4 到 3 倍，同樣來自對另一黨更負面。** 老師標籤下，風傳媒的傾向大多來自評論。
+4. **媒體之間的距離在 2018–2019 年拉大，不是在 2016 年政黨輪替時。** 固定 6 家媒體「國民黨 − 民進黨」的標準差，2014–2017 年約 0.3–0.4，2019 年起為 0.55–0.70。
+5. **執政黨被呈現得較差。** 從國民黨執政到民進黨執政，平均差距移動約 0.3，相當於每黨約 0.15 分，而且是逐年移動，不是一次跳動。
+6. **模型自己找到了已知事件。** 所有媒體一起偏離的月份，對得上 2017 年前瞻條例的立法院衝突、2017 年 8 月大停電、2023 年 6 月 #MeToo 事件等。
+
+有兩項觀察沒有通過檢查：2025 年 7 月的極化高峰取決於計入哪些媒體；民視 2017 到 2019 年間的下降與資料來源改變重疊（表 10.1）。
 
 ---
 
@@ -837,6 +866,7 @@ uv run python scripts/export_site.py      # 寫出 docs/assets/trends.json
 | 第 7 節 趨勢 | `src/twmedia/trend.py`、`scripts/fit_trends.py`、`config/events.yaml` |
 | 第 8 節 選舉 | `scripts/monitor_drift.py`、`recalibrate_stance.py`、`check_source_switch.py` |
 | 第 10 節 網站 | `scripts/export_site.py`、`docs/index.html` |
+| 第 10.1 節 其他規律 | `scripts/findings.py` |
 | 第 11 節 資金 | `scripts/money/` |
 
 **技術設定。** CKIP 的 BERT base 中文模型，最長 512 字，訓練 3 輪，學習率 3 × 10⁻⁵，批次 16。LLM 標籤來自 Vertex AI 批次預測，輸出 JSON。趨勢模型用卡爾曼濾波加 RTS 平滑，$\tau$ 以邊際概似在格點上選出，事件變異數倍數為 25。
