@@ -118,9 +118,9 @@ The two parties are scored separately, each on its own scale. An outlet can be h
 | Public Television Service (PTS) | 公視 | 2012 | own site |
 | The Storm Media | 風傳媒 | 2014 | own site |
 | Mirror Media | 鏡週刊 | 2016-11 | Internet Archive |
-| CTi News (added 12 Nov 2026) | 中天 | 2026-01 | own site's monthly sitemaps; earlier years on the Internet Archive are being checked |
+| CTi News (added 12 Nov 2026) | 中天 | 2026-01 | own site's monthly sitemaps; no politics section, so political articles are drawn from its main-news section (要聞); earlier years on the Internet Archive are being checked |
 
-**Table 3.1.** The outlets. CTi News was added on 12 November 2026 and is not yet in the results; its cable channel lost its licence in December 2020, and its news site keeps lists of articles only from January 2026. Details in [docs/collection-status.md](docs/collection-status.md) and [docs/archive-url-schemes.md](docs/archive-url-schemes.md).
+**Table 3.1.** The outlets. CTi News was added on 12 November 2026 and has data from January 2026 only, so it is on the website and in §10 but not in Table 10.1; its cable channel lost its licence in December 2020, and its news site keeps lists of articles only from January 2026. Details in [docs/collection-status.md](docs/collection-status.md) and [docs/archive-url-schemes.md](docs/archive-url-schemes.md).
 
 ### 3.2 Two ways of collecting
 
@@ -334,6 +334,8 @@ The website shows every outlet and party month by month, with intervals and even
 | The Storm Media 風傳媒 | −0.07 | +0.17 | +0.60 | +0.64 |
 
 **Table 10.1.** KMT score minus DPP score (positive: the KMT is presented more favourably). Each value is the smoothed monthly mean, weighted by articles, from the decision model v1 trend fit of 11 November 2026. The fit covers 117,728 political articles mentioning the KMT and 130,392 mentioning the DPP. "—" means fewer than 30 articles. The last column stops at September 2026, before the data boundary of §8.2. United Daily News 2012–15 covers 2015 only. FTV News changes source between 2017 (Internet Archive) and 2019 (its own site), and its score drops by about 0.6 across that gap; how much of the drop is the change of source is not yet known.
+
+**CTi News**, January to September 2026: KMT +0.03, DPP −0.45, gap +0.48 (1,435 articles mentioning the KMT), between United Daily News and The Storm Media in the same months, and with the same pattern of a neutral KMT score and a negative DPP score. CTi has no politics section, so its sample is political articles from its main-news section (§3.1). The teacher has not yet labelled any CTi articles; the weekly drift check will include them from the next batch.
 
 Read the table with these points in mind:
 
@@ -565,9 +567,9 @@ The code is under the [MIT licence](LICENSE). The derived data and model will ca
 | 公視 | 2012 | 自家網站 |
 | 風傳媒 | 2014 | 自家網站 |
 | 鏡週刊 | 2016-11 | Internet Archive |
-| 中天（2026-11-12 加入） | 2026-01 | 自家網站的每月 sitemap；更早的年份正在檢查 Internet Archive |
+| 中天（2026-11-12 加入） | 2026-01 | 自家網站的每月 sitemap；沒有政治版，從「要聞」版抽政治新聞；更早的年份正在檢查 Internet Archive |
 
-**表 3.1** 各家媒體。中天於 2026 年 11 月 12 日加入，尚未納入結果；中天新聞台在 2020 年 12 月失去執照，中天新聞網的文章清單只回溯到 2026 年 1 月。細節見 [docs/collection-status.md](docs/collection-status.md) 與 [docs/archive-url-schemes.md](docs/archive-url-schemes.md)。
+**表 3.1** 各家媒體。中天於 2026 年 11 月 12 日加入，只有 2026 年 1 月起的資料，所以出現在網站與第 10 節，表 10.1 沒有它；中天新聞台在 2020 年 12 月失去執照，中天新聞網的文章清單只回溯到 2026 年 1 月。細節見 [docs/collection-status.md](docs/collection-status.md) 與 [docs/archive-url-schemes.md](docs/archive-url-schemes.md)。
 
 ### 3.2 兩種收集方式
 
@@ -781,6 +783,8 @@ x = c + d\,t \quad\Rightarrow\quad \text{校正分數} = \frac{x - c}{d} \qquad 
 | 風傳媒 | −0.07 | +0.17 | +0.60 | +0.64 |
 
 **表 10.1** 國民黨分數減民進黨分數（正值：國民黨被呈現得較正面）。每個數值是平滑後的月平均，依篇數加權，取自決策模型 v1 於 2026 年 11 月 11 日的趨勢擬合；涵蓋提到國民黨的政治新聞 117,728 篇、提到民進黨的 130,392 篇。「—」表示少於 30 篇。最後一欄到 2026 年 9 月為止，在第 8.2 節的資料分界之前。聯合報 2012–15 只有 2015 年。民視在 2017 年（Internet Archive）與 2019 年（自家網站）之間換了資料來源，分數在這個缺口前後下降約 0.6；其中多少來自來源改變，目前還不知道。
+
+**中天**，2026 年 1–9 月：國民黨 +0.03、民進黨 −0.45，差距 +0.48（提到國民黨的 1,435 篇），同期介於聯合報與風傳媒之間，型態同樣是國民黨中性、民進黨負面。中天沒有政治版，樣本取自「要聞」版中的政治新聞（第 3.1 節）。老師模型還沒標過中天的文章，下一批每週漂移檢查起會納入。
 
 讀這張表時請注意：
 

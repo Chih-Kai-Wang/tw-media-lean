@@ -24,7 +24,7 @@ ANN = ROOT / "data" / "annotations"
 MODEL = "tw-media-lean-v1"
 TEACHER = "gemini-3.8-flash"
 NAME = dict(cna="中央社", ltn="自由時報", chinatimes="中國時報", ettoday="ETtoday", tvbs="TVBS", setn="三立", ftv="民視",
-            ebc="東森", pts="公視", storm="風傳媒", mirror="鏡週刊", udn="聯合報")
+            ebc="東森", pts="公視", storm="風傳媒", mirror="鏡週刊", udn="聯合報", ctinews="中天")
 FIXED = ["chinatimes", "cna", "ltn", "setn", "storm", "tvbs"]  # every year 2014-2026 has >= 30 articles per party
 TOPIC = dict(election="選舉", cross_strait="兩岸", foreign_defense="外交國防", economy="經濟", energy_environment="能源環境",
              justice_scandal="司法醜聞", legislature="立法院", social_welfare="社福", other="其他")
@@ -111,7 +111,7 @@ def main() -> None:
         tb = b.loc[o] if o in b.index else None
         L.append(f"| {NAME[o]} | {f(r.kmt)} | {f(r.dpp)} | {f(r.gap)} | {f(tb.kmt) if tb is not None else '—'} | "
                  f"{f(tb.dpp) if tb is not None else '—'} | {int(tb.nk) if tb is not None else '—'} |")
-    L.append("\n模型為 2024-01 至 2026-09；老師為 2019-01 至 2026-09（老師的樣本較少，所以取較長期間）。老師篇數為提到國民黨的篇數。\n")
+    L.append("\n模型為 2024-01 至 2026-09（中天只有 2026 年）；老師為 2019-01 至 2026-09（老師的樣本較少，所以取較長期間）。老師篇數為提到國民黨的篇數。\n")
 
     # 2. topic composition
     d = m[m.year >= "2020"]
