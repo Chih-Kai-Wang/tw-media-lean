@@ -12,9 +12,9 @@ v1 throughout, articles the model calls political and that mention the party:
 
     uv run python scripts/check_source_switch.py
 
-Per-outlet tables are election-period results, which PLAN.md holds back until after the election: they go to
-private/source-switch-full.md (not in git); docs/source-switch.md keeps medians and ranges across outlets.
-After the election, run with --full to publish the per-outlet version.
+docs/source-switch.md gets the per-outlet tables (published before the election since 2026-11-12, see PLAN.md);
+--summary writes only medians and ranges across outlets there. The per-outlet version is always also written to
+private/source-switch-full.md.
 """
 
 from __future__ import annotations
@@ -71,8 +71,8 @@ def summary(rows: list[tuple[str, float]], label: str) -> str:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--full", action="store_true", help="publish per-outlet tables in docs/ (after the election)")
-    full = ap.parse_args().full
+    ap.add_argument("--summary", action="store_true", help="docs/ gets medians and ranges across outlets only")
+    full = not ap.parse_args().summary
     model = {}
     for f in glob.glob(str(ROOT / "data" / "annotations" / f"model_{MODEL}_*.jsonl")):
         for line in open(f, encoding="utf-8"):
@@ -165,7 +165,7 @@ def main() -> None:
             if v:
                 L.append(f"| {y if y != '2026' else '2026（歷史抽樣補到的月份）'} | {NAME[p]} | {len(v)} | {np.median(v):+.2f} | {min(v):+.2f} 至 {max(v):+.2f} |")
 
-    L += ["\n## 4. 同一個月，兩種收集方式\n",
+    T4 = ["\n## 4. 同一個月，兩種收集方式\n",
           "2026 年 10 月同時有歷史抽樣（事後補抽，政治版）與即時收集的政治版文章。差異 = 即時政治版平均 − 歷史抽樣平均；"
           "兩者是同月份、同版面的不同文章，差異反映收集方式本身。\n",
           "| 媒體 | 政黨 | 歷史抽樣 | 即時 政治版 | 差異 |", "|---|---|---|---|---|"]
@@ -175,7 +175,9 @@ def main() -> None:
             h, n = same.get((o, p, "hist"), []), same.get((o, p, "news"), [])
             if len(h) >= 20 and len(n) >= 20:
                 pub4[p].append((o, np.mean(n) - np.mean(h)))
-                L.append(f"| {names.get(o, o)} | {NAME[p]} | {fmt(h)} | {fmt(n)} | {np.mean(n) - np.mean(h):+.2f} |")
+                T4.append(f"| {names.get(o, o)} | {NAME[p]} | {fmt(h)} | {fmt(n)} | {np.mean(n) - np.mean(h):+.2f} |")
+    if pub4:  # needs the October historical sample
+        L += T4
 
     L += ["\n## 判讀\n",
           "- **版面組成**：即時收集包含地方、社會等版面，那些版面的分數可能與政治版不同。聯合報最明顯：只看政治版，國民黨與 8–9 月幾乎相同，"
@@ -196,7 +198,7 @@ def main() -> None:
     head, rest = full_text.split("## 1. 只看政治版", 1)
     interp = rest[rest.index("## 判讀"):]
     P = [head.rstrip() + "\n",
-         "各媒體在選舉期間的分數屬於研究結果，依研究設計在選後才公開；這裡只列跨媒體的中位數與範圍，選後補上各媒體的表格。\n",
+         "這裡只列跨媒體的中位數與範圍。\n",
          "## 1. 只看政治版\n",
          "即時收集的文章依網址或網站分類標出政治版，規則近似歷史抽樣的條件（`config/sources.yaml`；中國時報與公視的歷史抽樣另外收進含政黨關鍵詞的其他版面文章）。變化 = 即時 2026 年 10–11 月平均 − 歷史抽樣 8–9 月平均。"
          "風傳媒的即時資料沒有可對應的分類；TVBS 與鏡週刊 2026 年 8–9 月沒有歷史樣本，三家都不列入。\n",
@@ -209,7 +211,7 @@ def main() -> None:
           "| 政黨 | 篇數 | 老師 | 模型 | 差異 |", "|---|---|---|---|---|", *pub2["KMT"], *pub2["DPP"],
           "\n各媒體的差異：", ]
     P[-1] += "；".join(f"{NAME[p]}中位數 {np.median([x for _, x in pub2[(p, 'outlets')]]):+.2f}（{min(x for _, x in pub2[(p, 'outlets')]):+.2f} 至 {max(x for _, x in pub2[(p, 'outlets')]):+.2f}）" for p in PARTIES) + "。\n"
-    P += [rest[rest.index("## 3."):rest.index("## 4.")].rstrip() + "\n"]
+    P += [rest[rest.index("## 3."):rest.index("## 4." if pub4 else "## 判讀")].rstrip() + "\n"]
     if pub4:
         P += ["## 4. 同一個月，兩種收集方式\n",
               "2026 年 10 月同時有歷史抽樣（事後補抽，政治版）與即時收集的政治版文章。差異 = 即時政治版平均 − 歷史抽樣平均。\n",

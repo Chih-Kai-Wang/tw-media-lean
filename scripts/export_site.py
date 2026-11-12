@@ -1,9 +1,9 @@
-"""Copy aggregate results into site/data/ for the static website (no article text, no user data).
+"""Copy aggregate results into docs/assets/ for the website, which GitHub Pages serves from docs/ (no article text, no user data).
 
     uv run python scripts/export_site.py [--model tw-media-lean-v1]
 
 Reads the decision-model trend fits with known events (scripts/fit_trends.py --labels model; monthly 2012-2026 and
-weekly from 2026-08) and config/sources.yaml, and writes site/data/trends.json. Only per outlet x party x period
+weekly from 2026-08) and config/sources.yaml, and writes docs/assets/trends.json. Only per outlet x party x period
 article counts, means and 95% intervals, plus the events from config/events.yaml, leave the machine, as PLAN.md
 requires. The decision model does not score TPP stance (docs/decision-model.md), so the site shows KMT and DPP only.
 """
@@ -48,7 +48,7 @@ def main() -> None:
         "month": month,
         "week": week,
     }
-    path = ROOT / "site" / "data" / "trends.json"
+    path = ROOT / "docs" / "assets" / "trends.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"month {len(month['series'])} + week {len(week['series'])} series, "
