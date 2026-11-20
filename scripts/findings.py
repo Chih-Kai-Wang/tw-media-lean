@@ -29,17 +29,26 @@ FIXED = ["chinatimes", "cna", "ltn", "setn", "storm", "tvbs"]  # every year 2014
 TOPIC = dict(election="選舉", cross_strait="兩岸", foreign_defense="外交國防", economy="經濟", energy_environment="能源環境",
              justice_scandal="司法醜聞", legislature="立法院", social_welfare="社福", other="其他")
 # Months found by section 7, identified by reading the titles of their most negative (or positive) articles.
-EVENTS = {
-    "2014-03": "太陽花學運、服貿爭議",
-    "2016-07": "黨產條例通過後的國民黨黨產爭議",
-    "2016-11": "一例一休修法、日本核災區食品進口爭議",
-    "2017-07": "前瞻基礎建設特別條例，國民黨團在立法院杯葛",
-    "2017-08": "815 大停電與限電",
-    "2020-07": "高雄市長補選，國民黨候選人李眉蓁論文抄襲案",
-    "2021-08": "國民黨主席選舉與公投連署",
-    "2023-06": "政界 #MeToo 性騷擾事件",
-    "2025-04": "共諜案、美國關稅、罷免爭議",
-    "2025-08": "823 罷免投票前國民黨的反罷免造勢",
+EVENTS = {  # (month, party, direction of the deviation) -> what the most extreme articles of that month are about
+    ("2014-03", "kmt", "-"): "太陽花學運、服貿爭議",
+    ("2014-11", "kmt", "+"): "2014 九合一選前國民黨候選人造勢",
+    ("2018-02", "dpp", "+"): "2018 地方選舉民進黨初選與春節政績宣傳",
+    ("2021-08", "dpp", "-"): "疫苗短缺與高端疫苗爭議",
+    ("2021-11", "kmt", "-"): "2021 年 12 月公投（萊豬、核四等）前的攻防",
+    ("2021-12", "kmt", "-"): "公投四案未通過後的檢討與萊豬爭議",
+    ("2022-02", "kmt", "-"): "日本福島食品解禁爭議、中國官媒點名國民黨立委「暗獨」",
+    ("2024-01", "kmt", "+"): "2024 總統與立委選前造勢",
+    ("2025-06", "dpp", "-"): "大罷免期間的「雜質說」、補助款與財劃法爭議、共諜案",
+    ("2026-05", "dpp", "+"): "賴清德少子化對策與 2026 地方選舉政見",
+    ("2016-07", "kmt", "-"): "黨產條例通過後的國民黨黨產爭議",
+    ("2016-11", "dpp", "-"): "一例一休修法、日本核災區食品進口爭議",
+    ("2017-07", "kmt", "-"): "前瞻基礎建設特別條例，國民黨團在立法院杯葛",
+    ("2017-08", "dpp", "-"): "815 大停電與限電",
+    ("2020-07", "kmt", "-"): "高雄市長補選，國民黨候選人李眉蓁論文抄襲案",
+    ("2021-08", "kmt", "+"): "國民黨主席選舉與公投連署",
+    ("2023-06", "dpp", "-"): "政界 #MeToo 性騷擾事件",
+    ("2025-04", "dpp", "-"): "共諜案、美國關稅、罷免爭議",
+    ("2025-08", "kmt", "+"): "823 罷免投票前國民黨的反罷免造勢",
 }
 
 
@@ -193,14 +202,13 @@ def main() -> None:
           "模型不知道任何事件。把同一組 6 家媒體每月的平均分數，減去前後一年的中位數，找出所有媒體一起偏離的月份，"
           "再讀那幾個月最負面（或最正面）文章的標題，辨認是什麼事件。結果大多對得上已知的重大事件，這也是一項額外的效度檢查。\n",
           "| 月份 | 政黨 | 偏離 | 那幾個月的報導主要在講 |", "|---|---|---|---|"]
-    picks = [(cm.kmt_dev.nsmallest(3), "國民黨"), (cm.dpp_dev.nsmallest(3), "民進黨"), (cm.kmt_dev.nlargest(1), "國民黨")]
-    shown = set()
-    for s, party in picks:
-        for mon, v in s.items():
-            shown.add(mon)
-            L.append(f"| {mon} | {party} | {f(v)} | {EVENTS.get(mon, '（尚未辨認）')} |")
+    picks = [(cm.kmt_dev.nsmallest(5), "kmt", "-"), (cm.dpp_dev.nsmallest(5), "dpp", "-"),
+             (cm.kmt_dev.nlargest(2), "kmt", "+"), (cm.dpp_dev.nlargest(2), "dpp", "+")]
+    for s_, party, sign in picks:
+        for mon, v in s_.items():
+            L.append(f"| {mon} | {'國民黨' if party == 'kmt' else '民進黨'} | {f(v)} | {EVENTS.get((mon, party, sign), '（尚未辨認）')} |")
     lvl = cm.kmt.idxmin()
-    L.append(f"\n若不扣除長期水準，國民黨分數最低的月份是 {lvl}（{f(cm.kmt.min())}，{EVENTS.get(lvl, '尚未辨認')}）。"
+    L.append(f"\n若不扣除長期水準，國民黨分數最低的月份是 {lvl}（{f(cm.kmt.min())}，{EVENTS.get((lvl, 'kmt', '-'), '尚未辨認')}）。"
              "偏離最大的月份會隨扣除長期水準的方式而略有不同；事件名稱是我們讀標題後的判斷。\n")
 
     # 8. caveats

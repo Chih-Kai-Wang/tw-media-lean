@@ -276,25 +276,28 @@ Articles published after the model was trained could differ from its training da
 | | DPP | 186 | +0.001 | 0.86 | no |
 | 7 – 9 Nov | KMT | 133 | +0.146 | 0.68 | yes |
 | | DPP | 145 | −0.018 | 0.80 | no |
+| 10 – 15 Nov | KMT | 271 | +0.059 | 0.78 | no |
+| | DPP | 298 | −0.075 | 0.80 | no |
 
 **Table 8.1.** Drift on live articles ([docs/drift-monitor.md](docs/drift-monitor.md)).
 
-The model reads live KMT coverage about 0.1 points more favourably than the teacher does. Refitting the calibration on the live weeks was tested by holding out each week in turn. It did not reduce the shift in the held-out week, so it was not applied (§9). The next weekly batch decides whether the alert repeats.
+The model reads live KMT coverage about 0.1 points more favourably than the teacher does. Refitting the calibration on the live weeks was tested by holding out each week in turn. It did not reduce the shift in the held-out week, so it was not applied (§9). In the week of 10–15 November the KMT shift fell back to +0.059, so the alert did not repeat and the calibration stays as it is.
 
 ### 8.2 The step at the data boundary
 
-Most outlets' KMT scores step up between September (historical sample) and October 2026 (live collection). [docs/source-switch.md](docs/source-switch.md) splits the step into three parts:
+Most outlets' KMT scores step up between September (historical sample) and October 2026 (live collection). [docs/source-switch.md](docs/source-switch.md) splits the step into its parts:
 
 | Cause | Size (median across outlets) |
 |---|---|
-| Whole step, KMT, politics section only | +0.21 (DPP +0.03) |
-| The model is more lenient to the KMT than the teacher on live articles | +0.10 (DPP −0.05) |
-| The usual pre-election rise, the same months in 2014 / 2018 / 2022 | +0.09 / +0.12 / +0.12 |
+| Whole step, KMT, politics section only | +0.22 (DPP +0.02) |
+| The usual pre-election rise in the historical sample, the same months in 2014 / 2018 / 2022 / 2026 | +0.07 / +0.11 / +0.12 / +0.14 |
+| The two ways of collecting, compared on the same month (October 2026, three outlets) | +0.05 to +0.15 (DPP −0.07 to +0.01) |
+| The model is more lenient to the KMT than the teacher on live articles | +0.09 (DPP −0.06) |
 | Other sections in the live feed | matters mostly for United Daily News |
 
 **Table 8.2.** Why the trends step up at the boundary.
 
-Most of the step across this boundary is therefore explained by the data and the model. The website says so next to the charts. The historical sample is now also being drawn for October 2026, so the two ways of collecting can be compared on the same month.
+Most of the step across this boundary is therefore explained by the data and the model. About half of the KMT step is the usual pre-election rise, which the historical sample shows for 2026 as well; most of the rest comes with the change of collection, of which the model's leniency on live articles is one part. The website says so next to the charts.
 
 ---
 
@@ -725,25 +728,28 @@ x = c + d\,t \quad\Rightarrow\quad \text{校正分數} = \frac{x - c}{d} \qquad 
 | | 民進黨 | 186 | +0.001 | 0.86 | 否 |
 | 11/07–11/09 | 國民黨 | 133 | +0.146 | 0.68 | 是 |
 | | 民進黨 | 145 | −0.018 | 0.80 | 否 |
+| 11/10–11/15 | 國民黨 | 271 | +0.059 | 0.78 | 否 |
+| | 民進黨 | 298 | −0.075 | 0.80 | 否 |
 
 **表 8.1** 即時文章上的漂移（[docs/drift-monitor.md](docs/drift-monitor.md)）。
 
-在即時新聞上，模型給國民黨的分數比老師高約 0.1 分。我們測試過用即時批次重新擬合校準，每次留下一週當測試；被留下那週的偏移沒有縮小，所以沒有套用（第 9 節）。下一批每週資料會決定警示是否連續出現。
+在即時新聞上，模型給國民黨的分數比老師高約 0.1 分。我們測試過用即時批次重新擬合校準，每次留下一週當測試；被留下那週的偏移沒有縮小，所以沒有套用（第 9 節）。11/10–11/15 這一週國民黨偏移回到 +0.059，警示沒有連續出現，校準維持不變。
 
 ### 8.2 資料分界上的跳動
 
-多數媒體的國民黨分數，在 2026 年 9 月（歷史抽樣）到 10 月（即時收集）之間往上跳。[docs/source-switch.md](docs/source-switch.md) 把這個跳動拆成三部分：
+多數媒體的國民黨分數，在 2026 年 9 月（歷史抽樣）到 10 月（即時收集）之間往上跳。[docs/source-switch.md](docs/source-switch.md) 把這個跳動拆成幾個部分：
 
 | 原因 | 幅度（各媒體中位數） |
 |---|---|
-| 整體跳動，國民黨，只看政治版 | +0.21（民進黨 +0.03） |
-| 在即時文章上，模型對國民黨比老師寬鬆 | +0.10（民進黨 −0.05） |
-| 歷年選前的固定上升，2014／2018／2022 同月份 | +0.09／+0.12／+0.12 |
+| 整體跳動，國民黨，只看政治版 | +0.22（民進黨 +0.02） |
+| 歷史抽樣中的選前固定上升，2014／2018／2022／2026 同月份 | +0.07／+0.11／+0.12／+0.14 |
+| 同一個月比較兩種收集方式（2026 年 10 月，3 家媒體） | +0.05 至 +0.15（民進黨 −0.07 至 +0.01） |
+| 在即時文章上，模型對國民黨比老師寬鬆 | +0.09（民進黨 −0.06） |
 | 即時收集包含其他版面 | 主要影響聯合報 |
 
 **表 8.2** 趨勢在分界上往上跳的原因。
 
-所以跨過這個分界的變化，大部分可以由資料與模型解釋。網站在圖旁註明了這一點。目前也正用歷史抽樣補抽 2026 年 10 月，以便在同一個月比較兩種收集方式。
+國民黨的跳動約有一半是選前的固定上升，歷史抽樣在 2026 年同樣看得到；其餘大多來自收集方式的改變，模型在即時文章上的寬鬆是其中一部分。網站在圖旁註明了這一點。
 
 ---
 
