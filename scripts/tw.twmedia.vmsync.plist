@@ -19,7 +19,10 @@
   <integer>3600</integer>
   <key>RunAtLoad</key>
   <true/>
+  <!-- vm_sync_daily.sh logs each sync to data/logs/vm_sync.log; this catches anything launchd itself prints -->
+  <key>StandardOutPath</key>
+  <string>/Users/wangzhikai/台灣媒體政黨傾向分析/data/logs/vm_sync.launchd.log</string>
   <key>StandardErrorPath</key>
-  <string>/tmp/tw.twmedia.vmsync.err</string>
+  <string>/Users/wangzhikai/台灣媒體政黨傾向分析/data/logs/vm_sync.launchd.log</string>
 </dict>
 </plist>

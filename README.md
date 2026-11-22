@@ -12,7 +12,7 @@
 
 ## Abstract
 
-This project measures how 12 Taiwanese news outlets present the Kuomintang (KMT) and the Democratic Progressive Party (DPP), month by month from 2012 to 2026, with uncertainty intervals, using only public data and methods anyone can rerun.
+This project measures how 13 Taiwanese news outlets present the Kuomintang (KMT) and the Democratic Progressive Party (DPP), month by month from 2012 to 2026, with uncertainty intervals, using only public data and methods anyone can rerun.
 
 A large language model (LLM), Gemini 3.8 Flash, reads about 14,000 articles without seeing the outlet's name and scores each party from −2 (very negative) to +2 (very positive). A small Chinese text model is then trained to imitate those scores, and it scores the remaining articles: 269,609 so far, of which 190,144 are political. A random-walk model smooths each outlet's monthly averages.
 
@@ -30,6 +30,7 @@ The outlets spread from FTV News (DPP more favourable by 1.36 points in 2024–2
 6. [Checking the labels](#6-checking-the-labels)
 7. [Trends over time](#7-trends-over-time)
 8. [Watching the 2026 election](#8-watching-the-2026-election)
+   - [8.3 The campaign weeks so far](#83-the-campaign-weeks-so-far)
 9. [What did not work](#9-what-did-not-work)
 10. [Results](#10-results)
    - [10.1 Other patterns](#101-other-patterns)
@@ -55,7 +56,7 @@ The two parties are scored separately, each on its own scale. An outlet can be h
 ### 1.2 Why it is hard
 
 1. **There is no answer key.** Nobody has scored hundreds of thousands of Taiwanese articles for how they present each party.
-2. **Scale.** Twelve outlets over fifteen years is far too much text to read, or even to send to a large model at a reasonable cost.
+2. **Scale.** Thirteen outlets over fifteen years is far too much text to read, or even to send to a large model at a reasonable cost.
 3. **Incomplete archives.** Outlets keep their old articles for different lengths of time, and the Internet Archive holds only part of the rest, so some outlets start later than 2012 (Table 3.1).
 4. **Who governs matters.** The party in government is the subject of most policy news and receives most criticism. The KMT governed until May 2016, the DPP since then, so part of any change across 2016 reflects the change of government.
 
@@ -299,6 +300,47 @@ Most outlets' KMT scores step up between September (historical sample) and Octob
 
 Most of the step across this boundary is therefore explained by the data and the model. About half of the KMT step is the usual pre-election rise, which the historical sample shows for 2026 as well; most of the rest comes with the change of collection, of which the model's leniency on live articles is one part. The website says so next to the charts.
 
+### 8.3 The campaign weeks so far
+
+The trend charts smooth across the boundary of §8.2, so part of any change there comes from the data. [docs/campaign-weeks.md](docs/campaign-weeks.md) uses live articles only (published from 31 October), so every number in it comes from one collection. Table 8.3 gives raw weekly means for whole weeks, Monday to Sunday.
+
+| Outlet | 2–8 Nov | 9–15 Nov | Change |
+|---|---:|---:|---:|
+| FTV News | −1.40 | −1.16 | +0.24 |
+| SET News | −0.96 | −0.72 | +0.24 |
+| Mirror Media | −0.47 | −0.41 | +0.06 |
+| Liberty Times | −0.49 | −0.39 | +0.10 |
+| CNA | −0.05 | +0.01 | +0.06 |
+| PTS | +0.17 | +0.17 | +0.00 |
+| EBC | +0.40 | +0.30 | −0.10 |
+| ETtoday | +0.33 | +0.42 | +0.09 |
+| TVBS | +0.33 | +0.48 | +0.15 |
+| United Daily News | +0.56 | +0.50 | −0.06 |
+| The Storm Media | +0.73 | +0.60 | −0.13 |
+| China Times | +0.83 | +0.82 | −0.01 |
+| CTi News | — | +0.96 | — |
+
+**Table 8.3.** KMT − DPP on live articles, raw weekly means. CTi News joined live collection on 12 November.
+
+- **The order holds.** Both weeks give the same order as the historical sample (§10): FTV and SET at the DPP end, China Times and CTi at the KMT end, CNA and PTS near zero.
+- **The largest change is a four-day news event.** FTV and SET moved 0.24 towards the middle. Their DPP scores dipped on 9–12 November, when the most negative articles were about singer Lo Ta-yu's criticism of Tsai Ing-wen and the DPP. Across the DPP-leaning outlets the DPP score fell from +0.39 to +0.25 on those days and was back at +0.40 to +0.58 on 13–15 November.
+- **KMT-leaning outlets show no trend** in their KMT score over the two weeks. Their highest days are Saturdays.
+
+| Data | Outlets | KMT: weekend − weekday | DPP: weekend − weekday |
+|---|---|---:|---:|
+| 2026 live, 2 weeks | KMT-leaning | **+0.14** | +0.08 |
+| | DPP-leaning | +0.05 | **+0.16** |
+| Historical sample, campaign months | KMT-leaning | **+0.09** | +0.06 |
+| | DPP-leaning | +0.14 | **+0.04** |
+| Historical sample, other months | KMT-leaning | **+0.08** | +0.01 |
+| | DPP-leaning | +0.05 | **+0.07** |
+| Historical sample, teacher's labels | KMT-leaning | **+0.04** | +0.00 |
+| | DPP-leaning | +0.11 | **+0.06** |
+
+**Table 8.4.** Weekend coverage is friendlier. Bold marks the party each group leans towards. 95% intervals are in docs/campaign-weeks.md.
+
+Both parties score higher on Saturdays and Sundays, in the 2026 live weeks and across the historical sample; with the teacher's own labels three of the four cells point the same way, by less. The party an outlet leans towards gains more at weekends in the 2026 live weeks and in ordinary historical months, and less clearly in past campaign months and the teacher's labels, so that part is tentative. One likely reason is that weekends carry fewer legislative clashes and more rallies, visits and local events. A week that is only partly collected and includes a weekend therefore reads high: read the newest week on the website once it is complete.
+
 ---
 
 ## 9. What did not work
@@ -428,7 +470,7 @@ The website is the single file `docs/index.html`, served by GitHub Pages. To pre
 | §5 decision model | `scripts/train_decision_model.py`, `calibrate_stance.py`, `predict_decision_model.py`, `compare_model_cells.py` |
 | §6 checks | `scripts/swap_test.py`, `compare_jurors.py`, `compare_prompts.py`, `jury_disagreements.py`, `phrase_baseline.py`, `report_bulk.py`; `config/politicians.yaml` |
 | §7 trends | `src/twmedia/trend.py`, `scripts/fit_trends.py`, `config/events.yaml` |
-| §8 election | `scripts/monitor_drift.py`, `recalibrate_stance.py`, `check_source_switch.py` |
+| §8 election | `scripts/monitor_drift.py`, `recalibrate_stance.py`, `check_source_switch.py`, `campaign_weeks.py` |
 | §10 website | `scripts/export_site.py`, `docs/index.html` |
 | §10.1 other patterns | `scripts/findings.py` |
 | §11 money | `scripts/money/` |
@@ -464,7 +506,7 @@ The code is under the [MIT licence](LICENSE). The derived data and model will ca
 
 ## 摘要
 
-本專案量化台灣 12 家新聞媒體 2012 至 2026 年間每個月如何呈現國民黨與民進黨，附不確定區間，只用公開資料與任何人都能重跑的方法。
+本專案量化台灣 13 家新聞媒體 2012 至 2026 年間每個月如何呈現國民黨與民進黨，附不確定區間，只用公開資料與任何人都能重跑的方法。
 
 大型語言模型（LLM）Gemini 3.8 Flash 在看不到媒體名稱的情況下讀約 1.4 萬篇文章，替每個政黨打 −2（很負面）到 +2（很正面）的分數。接著訓練一個小型中文模型模仿這些分數，由它替其餘文章評分：目前共 269,609 篇，其中 190,144 篇是政治新聞。最後用隨機漫步模型平滑每家媒體的月平均。
 
@@ -482,6 +524,7 @@ The code is under the [MIT licence](LICENSE). The derived data and model will ca
 6. [標籤的檢驗](#6-標籤的檢驗)
 7. [隨時間的變化](#7-隨時間的變化)
 8. [觀測 2026 年選舉](#8-觀測-2026-年選舉)
+   - [8.3 選戰期間的週資料](#83-選戰期間的週資料)
 9. [沒有用的做法](#9-沒有用的做法)
 10. [結果](#10-結果)
    - [10.1 其他規律](#101-其他規律)
@@ -507,7 +550,7 @@ The code is under the [MIT licence](LICENSE). The derived data and model will ca
 ### 1.2 為什麼難
 
 1. **沒有標準答案。** 沒有人替數十萬篇台灣新聞，就各政黨被呈現的方式打過分。
-2. **規模。** 12 家媒體、15 年的文章，多到不可能全部讀完，也無法以合理成本全部送給大型模型。
+2. **規模。** 13 家媒體、15 年的文章，多到不可能全部讀完，也無法以合理成本全部送給大型模型。
 3. **存檔不完整。** 各家保留舊文章的時間不同，Internet Archive 也只存了一部分，所以有些媒體晚於 2012 年才有資料（表 3.1）。
 4. **誰執政有影響。** 執政黨是多數政策新聞的主角，也承受多數批評。2016 年 5 月以前由國民黨執政，之後由民進黨執政，所以跨過 2016 年的變化，一部分反映的是政黨輪替。
 
@@ -751,6 +794,47 @@ x = c + d\,t \quad\Rightarrow\quad \text{校正分數} = \frac{x - c}{d} \qquad 
 
 國民黨的跳動約有一半是選前的固定上升，歷史抽樣在 2026 年同樣看得到；其餘大多來自收集方式的改變，模型在即時文章上的寬鬆是其中一部分。網站在圖旁註明了這一點。
 
+### 8.3 選戰期間的週資料
+
+趨勢圖跨過 8.2 節的分界做平滑，所以分界附近的變化有一部分來自資料本身。[docs/campaign-weeks.md](docs/campaign-weeks.md) 只用即時收集的文章（10/31 起刊出），所有數字都來自同一種收集方式。表 8.3 是完整週（週一到週日）的原始平均。
+
+| 媒體 | 11/02–11/08 | 11/09–11/15 | 變化 |
+|---|---:|---:|---:|
+| 民視 | −1.40 | −1.16 | +0.24 |
+| 三立 | −0.96 | −0.72 | +0.24 |
+| 鏡週刊 | −0.47 | −0.41 | +0.06 |
+| 自由時報 | −0.49 | −0.39 | +0.10 |
+| 中央社 | −0.05 | +0.01 | +0.06 |
+| 公視 | +0.17 | +0.17 | +0.00 |
+| 東森 | +0.40 | +0.30 | −0.10 |
+| ETtoday | +0.33 | +0.42 | +0.09 |
+| TVBS | +0.33 | +0.48 | +0.15 |
+| 聯合報 | +0.56 | +0.50 | −0.06 |
+| 風傳媒 | +0.73 | +0.60 | −0.13 |
+| 中國時報 | +0.83 | +0.82 | −0.01 |
+| 中天 | — | +0.96 | — |
+
+**表 8.3** 即時文章上的「國民黨 − 民進黨」原始週平均。中天 11/12 才加入即時收集。
+
+- **排序不變。**兩週的排序都和歷史抽樣（第 10 節）相同：民視、三立在偏民進黨的一端，中國時報、中天在偏國民黨的一端，中央社、公視接近 0。
+- **最大的變化來自一個四天的新聞事件。**民視、三立各往中間移了 0.24 分，原因是兩家對民進黨的分數在 11/09–11/12 下降；這幾天分數最低的文章，主要是歌手羅大佑批評蔡英文與民進黨的發言。偏民進黨媒體的民進黨分數在這四天從 +0.39 降到 +0.25，11/13–11/15 回到 +0.40 至 +0.58。
+- **偏國民黨的媒體，兩週內國民黨分數沒有趨勢**，分數最高的幾天是週六。
+
+| 資料 | 媒體 | 國民黨：週末 − 平日 | 民進黨：週末 − 平日 |
+|---|---|---:|---:|
+| 2026 即時，2 週 | 偏國民黨 | **+0.14** | +0.08 |
+| | 偏民進黨 | +0.05 | **+0.16** |
+| 歷史抽樣，選前月份 | 偏國民黨 | **+0.09** | +0.06 |
+| | 偏民進黨 | +0.14 | **+0.04** |
+| 歷史抽樣，其他月份 | 偏國民黨 | **+0.08** | +0.01 |
+| | 偏民進黨 | +0.05 | **+0.07** |
+| 歷史抽樣，老師的標籤 | 偏國民黨 | **+0.04** | +0.00 |
+| | 偏民進黨 | +0.11 | **+0.06** |
+
+**表 8.4** 週末的報導比較友善。粗體為該組媒體偏好的政黨；95% 區間見 docs/campaign-weeks.md。
+
+週六、週日刊出的政治新聞，兩黨的分數都比平日高，2026 年即時資料與整個歷史抽樣都是如此；用老師自己的標籤重算，四項中有三項方向相同，幅度較小。媒體偏好的那一黨週末上升較多，這在 2026 年即時資料與歷史上的平常月份看得到，在過去的選前月份與老師的標籤裡較不明顯，目前只算初步觀察。可能的原因是週末立法院的攻防較少，造勢、參訪與地方活動的報導較多。因此只收集了部分天數、又剛好包含週末的那一週，分數會偏高；網站上最新一週的數字，要等整週收齊後再看。
+
 ---
 
 ## 9. 沒有用的做法
@@ -880,7 +964,7 @@ uv run python scripts/export_site.py      # 寫出 docs/assets/trends.json
 | 第 5 節 決策模型 | `scripts/train_decision_model.py`、`calibrate_stance.py`、`predict_decision_model.py`、`compare_model_cells.py` |
 | 第 6 節 檢驗 | `scripts/swap_test.py`、`compare_jurors.py`、`compare_prompts.py`、`jury_disagreements.py`、`phrase_baseline.py`、`report_bulk.py`；`config/politicians.yaml` |
 | 第 7 節 趨勢 | `src/twmedia/trend.py`、`scripts/fit_trends.py`、`config/events.yaml` |
-| 第 8 節 選舉 | `scripts/monitor_drift.py`、`recalibrate_stance.py`、`check_source_switch.py` |
+| 第 8 節 選舉 | `scripts/monitor_drift.py`、`recalibrate_stance.py`、`check_source_switch.py`、`campaign_weeks.py` |
 | 第 10 節 網站 | `scripts/export_site.py`、`docs/index.html` |
 | 第 10.1 節 其他規律 | `scripts/findings.py` |
 | 第 11 節 資金 | `scripts/money/` |
