@@ -39,6 +39,7 @@ CAMPAIGN = {"2014-10", "2014-11", "2018-10", "2018-11", "2022-10", "2022-11",
 # Short swings in the daily table, identified by reading the titles of that camp's most negative articles.
 SWINGS = {
     ("green", "dpp", "2026-11-09", "2026-11-12"): "歌手羅大佑批評蔡英文與民進黨的發言，以及各方回應",
+    ("blue", "kmt", "2026-11-17", "2026-11-20"): "水庫光電板爭議中民進黨對國民黨的反擊，以及國民黨內部對秦慧珠的處分",
 }
 
 

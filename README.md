@@ -14,7 +14,7 @@
 
 This project measures how 13 Taiwanese news outlets present the Kuomintang (KMT) and the Democratic Progressive Party (DPP), month by month from 2012 to 2026, with uncertainty intervals, using only public data and methods anyone can rerun.
 
-A large language model (LLM), Gemini 3.8 Flash, reads about 14,000 articles without seeing the outlet's name and scores each party from −2 (very negative) to +2 (very positive). A small Chinese text model is then trained to imitate those scores, and it scores the remaining articles: 269,609 so far, of which 190,144 are political. A random-walk model smooths each outlet's monthly averages.
+A large language model (LLM), Gemini 3.8 Flash, reads about 14,000 articles without seeing the outlet's name and scores each party from −2 (very negative) to +2 (very positive). A small Chinese text model is then trained to imitate those scores, and it scores the remaining articles: 387,186 so far, of which 272,911 are political. A random-walk model smooths each outlet's monthly averages.
 
 The labels are checked in several ways. Each party's own press releases should read as positive for that party, and they do: 90% of KMT releases and 94% of DPP releases. Swapping the party names in an article should swap the scores; the leftover effect is 0.07 points on a 4-point scale. Three other models from different companies rank the outlets almost the same way (rank correlation 0.96–0.99).
 
@@ -75,7 +75,7 @@ The two parties are scored separately, each on its own scale. An outlet can be h
    a small Chinese model learns to imitate the LLM
                  │
                  ▼
-   it scores every sampled article (269,609)
+   it scores every sampled article (387,186)
                  │
                  ▼
    a random-walk model smooths each outlet × party × month,
@@ -279,10 +279,12 @@ Articles published after the model was trained could differ from its training da
 | | DPP | 145 | −0.018 | 0.80 | no |
 | 10 – 15 Nov | KMT | 271 | +0.059 | 0.78 | no |
 | | DPP | 298 | −0.075 | 0.80 | no |
+| 16 – 22 Nov | KMT | 331 | +0.065 | 0.76 | no |
+| | DPP | 360 | −0.034 | 0.76 | no |
 
 **Table 8.1.** Drift on live articles ([docs/drift-monitor.md](docs/drift-monitor.md)).
 
-The model reads live KMT coverage about 0.1 points more favourably than the teacher does. Refitting the calibration on the live weeks was tested by holding out each week in turn. It did not reduce the shift in the held-out week, so it was not applied (§9). In the week of 10–15 November the KMT shift fell back to +0.059, so the alert did not repeat and the calibration stays as it is.
+The model reads live KMT coverage about 0.1 points more favourably than the teacher does. Refitting the calibration on the live weeks was tested by holding out each week in turn. It did not reduce the shift in the held-out week, so it was not applied (§9). In the weeks of 10–15 and 16–22 November the KMT shift was +0.059 and +0.065, so the alert did not repeat and the calibration stays as it is.
 
 ### 8.2 The step at the data boundary
 
@@ -304,35 +306,35 @@ Most of the step across this boundary is therefore explained by the data and the
 
 The trend charts smooth across the boundary of §8.2, so part of any change there comes from the data. [docs/campaign-weeks.md](docs/campaign-weeks.md) uses live articles only (published from 31 October), so every number in it comes from one collection. Table 8.3 gives raw weekly means for whole weeks, Monday to Sunday.
 
-| Outlet | 2–8 Nov | 9–15 Nov | Change |
-|---|---:|---:|---:|
-| FTV News | −1.40 | −1.16 | +0.24 |
-| SET News | −0.96 | −0.72 | +0.24 |
-| Mirror Media | −0.47 | −0.41 | +0.06 |
-| Liberty Times | −0.49 | −0.39 | +0.10 |
-| CNA | −0.05 | +0.01 | +0.06 |
-| PTS | +0.17 | +0.17 | +0.00 |
-| EBC | +0.40 | +0.30 | −0.10 |
-| ETtoday | +0.33 | +0.42 | +0.09 |
-| TVBS | +0.33 | +0.48 | +0.15 |
-| United Daily News | +0.56 | +0.50 | −0.06 |
-| The Storm Media | +0.73 | +0.60 | −0.13 |
-| China Times | +0.83 | +0.82 | −0.01 |
-| CTi News | — | +0.96 | — |
+| Outlet | 2–8 Nov | 9–15 Nov | 16–22 Nov | Change |
+|---|---:|---:|---:|---:|
+| FTV News | −1.40 | −1.16 | −1.33 | +0.07 |
+| SET News | −0.96 | −0.72 | −0.85 | +0.11 |
+| Liberty Times | −0.49 | −0.39 | −0.44 | +0.05 |
+| Mirror Media | −0.47 | −0.41 | −0.41 | +0.05 |
+| CNA | −0.05 | +0.01 | −0.09 | −0.05 |
+| PTS | +0.17 | +0.17 | +0.24 | +0.07 |
+| EBC | +0.40 | +0.29 | +0.25 | −0.16 |
+| ETtoday | +0.33 | +0.42 | +0.40 | +0.06 |
+| TVBS | +0.33 | +0.48 | +0.42 | +0.09 |
+| United Daily News | +0.56 | +0.50 | +0.49 | −0.07 |
+| The Storm Media | +0.73 | +0.61 | +0.57 | −0.17 |
+| China Times | +0.83 | +0.82 | +0.72 | −0.11 |
+| CTi News | — | +0.96 | +0.88 | −0.08 |
 
-**Table 8.3.** KMT − DPP on live articles, raw weekly means. CTi News joined live collection on 12 November.
+**Table 8.3.** KMT − DPP on live articles, raw weekly means. Change is the last week minus the first. CTi News joined live collection on 12 November.
 
-- **The order holds.** Both weeks give the same order as the historical sample (§10): FTV and SET at the DPP end, China Times and CTi at the KMT end, CNA and PTS near zero.
-- **The largest change is a four-day news event.** FTV and SET moved 0.24 towards the middle. Their DPP scores dipped on 9–12 November, when the most negative articles were about singer Lo Ta-yu's criticism of Tsai Ing-wen and the DPP. Across the DPP-leaning outlets the DPP score fell from +0.39 to +0.25 on those days and was back at +0.40 to +0.58 on 13–15 November.
-- **KMT-leaning outlets show no trend** in their KMT score over the two weeks. Their highest days are Saturdays.
+- **The order holds.** All three weeks give the same order as the historical sample (§10): FTV and SET at the DPP end, China Times and CTi at the KMT end, CNA and PTS near zero.
+- **Short swings follow single news events and fade within days.** FTV and SET moved about 0.24 towards the middle in the second week because their DPP scores dipped on 9–12 November, when the most negative articles were about singer Lo Ta-yu's criticism of Tsai Ing-wen and the DPP; in the third week they were back near their first-week level. The KMT-leaning outlets' KMT score dipped on 17–20 November (+0.20 against +0.31 for the period), when the most negative articles were DPP rebuttals in the dispute over solar panels at reservoirs, and a KMT branch disciplining Taipei city councillor Chin Hui-chu.
+- **Several KMT-leaning outlets are lower in the third week** (China Times, EBC and The Storm Media by 0.11 to 0.17). The model's KMT shift varies from week to week by about 0.1 (Table 8.1), so changes of this size need more weeks before they count as a trend.
 
 | Data | Outlets | KMT: weekend − weekday | DPP: weekend − weekday |
 |---|---|---:|---:|
-| 2026 live, 2 weeks | KMT-leaning | **+0.14** | +0.08 |
-| | DPP-leaning | +0.05 | **+0.16** |
-| Historical sample, campaign months | KMT-leaning | **+0.09** | +0.06 |
-| | DPP-leaning | +0.14 | **+0.04** |
-| Historical sample, other months | KMT-leaning | **+0.08** | +0.01 |
+| 2026 live, 3 weeks | KMT-leaning | **+0.12** | +0.08 |
+| | DPP-leaning | +0.07 | **+0.16** |
+| Historical sample, campaign months | KMT-leaning | **+0.10** | +0.06 |
+| | DPP-leaning | +0.15 | **+0.05** |
+| Historical sample, other months | KMT-leaning | **+0.09** | +0.01 |
 | | DPP-leaning | +0.05 | **+0.07** |
 | Historical sample, teacher's labels | KMT-leaning | **+0.04** | +0.00 |
 | | DPP-leaning | +0.11 | **+0.06** |
@@ -380,7 +382,7 @@ The website shows every outlet and party month by month, with intervals and even
 
 **Table 10.1.** KMT score minus DPP score (positive: the KMT is presented more favourably). Each value is the smoothed monthly mean, weighted by articles, from the decision model v1 trend fit of 11 November 2026. The fit covers 117,728 political articles mentioning the KMT and 130,392 mentioning the DPP. "—" means fewer than 30 articles. The last column stops at September 2026, before the data boundary of §8.2. United Daily News 2012–15 covers 2015 only. FTV News changes source between 2017 (Internet Archive) and 2019 (its own site), and its score drops by about 0.6 across that gap; how much of the drop is the change of source is not yet known.
 
-**CTi News**, January to September 2026: KMT +0.03, DPP −0.45, gap +0.48 (1,435 articles mentioning the KMT), between United Daily News and The Storm Media in the same months, and with the same pattern of a neutral KMT score and a negative DPP score. CTi has no politics section, so its sample is political articles from its main-news section (§3.1). The teacher has not yet labelled any CTi articles; the weekly drift check will include them from the next batch.
+**CTi News**, January to September 2026: KMT +0.03, DPP −0.45, gap +0.48 (1,435 articles mentioning the KMT), between United Daily News and The Storm Media in the same months, and with the same pattern of a neutral KMT score and a negative DPP score. CTi has no politics section, so its sample is political articles from its main-news section (§3.1). Since 10 November the weekly drift batches include CTi articles, so the teacher labels a sample of CTi every week.
 
 Read the table with these points in mind:
 
@@ -508,7 +510,7 @@ The code is under the [MIT licence](LICENSE). The derived data and model will ca
 
 本專案量化台灣 13 家新聞媒體 2012 至 2026 年間每個月如何呈現國民黨與民進黨，附不確定區間，只用公開資料與任何人都能重跑的方法。
 
-大型語言模型（LLM）Gemini 3.8 Flash 在看不到媒體名稱的情況下讀約 1.4 萬篇文章，替每個政黨打 −2（很負面）到 +2（很正面）的分數。接著訓練一個小型中文模型模仿這些分數，由它替其餘文章評分：目前共 269,609 篇，其中 190,144 篇是政治新聞。最後用隨機漫步模型平滑每家媒體的月平均。
+大型語言模型（LLM）Gemini 3.8 Flash 在看不到媒體名稱的情況下讀約 1.4 萬篇文章，替每個政黨打 −2（很負面）到 +2（很正面）的分數。接著訓練一個小型中文模型模仿這些分數，由它替其餘文章評分：目前共 387,186 篇，其中 272,911 篇是政治新聞。最後用隨機漫步模型平滑每家媒體的月平均。
 
 標籤用幾種方式檢查。各黨自己的新聞稿應該被判為對自己有利，實際上國民黨新聞稿判對 90%、民進黨新聞稿判對 94%。把文章中的黨名對調，分數應該跟著對調，剩下的偏差是 4 分量尺上的 0.07 分。另外三個不同公司的模型對媒體的排序幾乎相同（排名相關 0.96–0.99）。
 
@@ -569,7 +571,7 @@ The code is under the [MIT licence](LICENSE). The derived data and model will ca
    小型中文模型學著模仿 LLM
                  │
                  ▼
-   替所有抽樣文章評分（269,609 篇）
+   替所有抽樣文章評分（387,186 篇）
                  │
                  ▼
    隨機漫步模型平滑每個「媒體 × 政黨 × 月」，
@@ -773,10 +775,12 @@ x = c + d\,t \quad\Rightarrow\quad \text{校正分數} = \frac{x - c}{d} \qquad 
 | | 民進黨 | 145 | −0.018 | 0.80 | 否 |
 | 11/10–11/15 | 國民黨 | 271 | +0.059 | 0.78 | 否 |
 | | 民進黨 | 298 | −0.075 | 0.80 | 否 |
+| 11/16–11/22 | 國民黨 | 331 | +0.065 | 0.76 | 否 |
+| | 民進黨 | 360 | −0.034 | 0.76 | 否 |
 
 **表 8.1** 即時文章上的漂移（[docs/drift-monitor.md](docs/drift-monitor.md)）。
 
-在即時新聞上，模型給國民黨的分數比老師高約 0.1 分。我們測試過用即時批次重新擬合校準，每次留下一週當測試；被留下那週的偏移沒有縮小，所以沒有套用（第 9 節）。11/10–11/15 這一週國民黨偏移回到 +0.059，警示沒有連續出現，校準維持不變。
+在即時新聞上，模型給國民黨的分數比老師高約 0.1 分。我們測試過用即時批次重新擬合校準，每次留下一週當測試；被留下那週的偏移沒有縮小，所以沒有套用（第 9 節）。11/10–11/15 與 11/16–11/22 兩週國民黨偏移為 +0.059 與 +0.065，警示沒有連續出現，校準維持不變。
 
 ### 8.2 資料分界上的跳動
 
@@ -798,35 +802,35 @@ x = c + d\,t \quad\Rightarrow\quad \text{校正分數} = \frac{x - c}{d} \qquad 
 
 趨勢圖跨過 8.2 節的分界做平滑，所以分界附近的變化有一部分來自資料本身。[docs/campaign-weeks.md](docs/campaign-weeks.md) 只用即時收集的文章（10/31 起刊出），所有數字都來自同一種收集方式。表 8.3 是完整週（週一到週日）的原始平均。
 
-| 媒體 | 11/02–11/08 | 11/09–11/15 | 變化 |
-|---|---:|---:|---:|
-| 民視 | −1.40 | −1.16 | +0.24 |
-| 三立 | −0.96 | −0.72 | +0.24 |
-| 鏡週刊 | −0.47 | −0.41 | +0.06 |
-| 自由時報 | −0.49 | −0.39 | +0.10 |
-| 中央社 | −0.05 | +0.01 | +0.06 |
-| 公視 | +0.17 | +0.17 | +0.00 |
-| 東森 | +0.40 | +0.30 | −0.10 |
-| ETtoday | +0.33 | +0.42 | +0.09 |
-| TVBS | +0.33 | +0.48 | +0.15 |
-| 聯合報 | +0.56 | +0.50 | −0.06 |
-| 風傳媒 | +0.73 | +0.60 | −0.13 |
-| 中國時報 | +0.83 | +0.82 | −0.01 |
-| 中天 | — | +0.96 | — |
+| 媒體 | 11/02–11/08 | 11/09–11/15 | 11/16–11/22 | 變化 |
+|---|---:|---:|---:|---:|
+| 民視 | −1.40 | −1.16 | −1.33 | +0.07 |
+| 三立 | −0.96 | −0.72 | −0.85 | +0.11 |
+| 自由時報 | −0.49 | −0.39 | −0.44 | +0.05 |
+| 鏡週刊 | −0.47 | −0.41 | −0.41 | +0.05 |
+| 中央社 | −0.05 | +0.01 | −0.09 | −0.05 |
+| 公視 | +0.17 | +0.17 | +0.24 | +0.07 |
+| 東森 | +0.40 | +0.29 | +0.25 | −0.16 |
+| ETtoday | +0.33 | +0.42 | +0.40 | +0.06 |
+| TVBS | +0.33 | +0.48 | +0.42 | +0.09 |
+| 聯合報 | +0.56 | +0.50 | +0.49 | −0.07 |
+| 風傳媒 | +0.73 | +0.61 | +0.57 | −0.17 |
+| 中國時報 | +0.83 | +0.82 | +0.72 | −0.11 |
+| 中天 | — | +0.96 | +0.88 | −0.08 |
 
-**表 8.3** 即時文章上的「國民黨 − 民進黨」原始週平均。中天 11/12 才加入即時收集。
+**表 8.3** 即時文章上的「國民黨 − 民進黨」原始週平均。變化為最後一週減第一週。中天 11/12 才加入即時收集。
 
-- **排序不變。**兩週的排序都和歷史抽樣（第 10 節）相同：民視、三立在偏民進黨的一端，中國時報、中天在偏國民黨的一端，中央社、公視接近 0。
-- **最大的變化來自一個四天的新聞事件。**民視、三立各往中間移了 0.24 分，原因是兩家對民進黨的分數在 11/09–11/12 下降；這幾天分數最低的文章，主要是歌手羅大佑批評蔡英文與民進黨的發言。偏民進黨媒體的民進黨分數在這四天從 +0.39 降到 +0.25，11/13–11/15 回到 +0.40 至 +0.58。
-- **偏國民黨的媒體，兩週內國民黨分數沒有趨勢**，分數最高的幾天是週六。
+- **排序不變。**三週的排序都和歷史抽樣（第 10 節）相同：民視、三立在偏民進黨的一端，中國時報、中天在偏國民黨的一端，中央社、公視接近 0。
+- **短期起伏對得上單一新聞事件，幾天內就消退。**第二週民視、三立往中間移了約 0.24 分，原因是兩家對民進黨的分數在 11/09–11/12 下降，這幾天分數最低的文章主要是歌手羅大佑批評蔡英文與民進黨的發言；第三週兩家回到接近第一週的位置。偏國民黨媒體的國民黨分數在 11/17–11/20 下降（+0.20，期間平均 +0.31），這幾天分數最低的文章主要是水庫光電板爭議中民進黨對國民黨的反擊，以及國民黨內部對秦慧珠的處分。
+- **幾家偏國民黨的媒體第三週較低**（中國時報、東森、風傳媒低 0.11 到 0.17 分）。模型對國民黨的偏移每週相差約 0.1 分（表 8.1），這個大小的變化要再多幾週才能算是趨勢。
 
 | 資料 | 媒體 | 國民黨：週末 − 平日 | 民進黨：週末 − 平日 |
 |---|---|---:|---:|
-| 2026 即時，2 週 | 偏國民黨 | **+0.14** | +0.08 |
-| | 偏民進黨 | +0.05 | **+0.16** |
-| 歷史抽樣，選前月份 | 偏國民黨 | **+0.09** | +0.06 |
-| | 偏民進黨 | +0.14 | **+0.04** |
-| 歷史抽樣，其他月份 | 偏國民黨 | **+0.08** | +0.01 |
+| 2026 即時，3 週 | 偏國民黨 | **+0.12** | +0.08 |
+| | 偏民進黨 | +0.07 | **+0.16** |
+| 歷史抽樣，選前月份 | 偏國民黨 | **+0.10** | +0.06 |
+| | 偏民進黨 | +0.15 | **+0.05** |
+| 歷史抽樣，其他月份 | 偏國民黨 | **+0.09** | +0.01 |
 | | 偏民進黨 | +0.05 | **+0.07** |
 | 歷史抽樣，老師的標籤 | 偏國民黨 | **+0.04** | +0.00 |
 | | 偏民進黨 | +0.11 | **+0.06** |
@@ -874,7 +878,7 @@ x = c + d\,t \quad\Rightarrow\quad \text{校正分數} = \frac{x - c}{d} \qquad 
 
 **表 10.1** 國民黨分數減民進黨分數（正值：國民黨被呈現得較正面）。每個數值是平滑後的月平均，依篇數加權，取自決策模型 v1 於 2026 年 11 月 11 日的趨勢擬合；涵蓋提到國民黨的政治新聞 117,728 篇、提到民進黨的 130,392 篇。「—」表示少於 30 篇。最後一欄到 2026 年 9 月為止，在第 8.2 節的資料分界之前。聯合報 2012–15 只有 2015 年。民視在 2017 年（Internet Archive）與 2019 年（自家網站）之間換了資料來源，分數在這個缺口前後下降約 0.6；其中多少來自來源改變，目前還不知道。
 
-**中天**，2026 年 1–9 月：國民黨 +0.03、民進黨 −0.45，差距 +0.48（提到國民黨的 1,435 篇），同期介於聯合報與風傳媒之間，型態同樣是國民黨中性、民進黨負面。中天沒有政治版，樣本取自「要聞」版中的政治新聞（第 3.1 節）。老師模型還沒標過中天的文章，下一批每週漂移檢查起會納入。
+**中天**，2026 年 1–9 月：國民黨 +0.03、民進黨 −0.45，差距 +0.48（提到國民黨的 1,435 篇），同期介於聯合報與風傳媒之間，型態同樣是國民黨中性、民進黨負面。中天沒有政治版，樣本取自「要聞」版中的政治新聞（第 3.1 節）。11/10 起每週的漂移檢查批次都包含中天的文章，老師模型每週會標一部分中天的報導。
 
 讀這張表時請注意：
 
