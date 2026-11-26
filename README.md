@@ -136,6 +136,7 @@ Social platforms (YouTube, PTT, LINE TODAY) are also collected, but they are not
 
 - An honest User-Agent, robots.txt obeyed, at most one request per second per site.
 - No logging in, and no getting around blocks or bot checks. A source that blocks us is dropped.
+- One exception to the robots.txt rule: Meta's Ad Library, a public transparency database whose robots.txt disallows all automated access. Meta's official API for it needs a separate identity check, so we read the public pages and the downloadable report with open-source tools, without logging in, at one page every 15 seconds ([docs/meta-ads.md](docs/meta-ads.md)).
 - Sources whose robots.txt says `ai-train=no` (PTT, CNA) are labelled and scored, but never used to train a model.
 - Article text is not republished. Only URLs, titles, labels and aggregates are. User names on discussion platforms are hashed ([docs/privacy.md](docs/privacy.md)).
 
@@ -355,7 +356,7 @@ Both parties score higher on Saturdays and Sundays, in the 2026 live weeks and a
 | Word-based method as an outlet ranking | rankings disagree between legislative terms (−0.22 to 0.50) | Written questions carry few partisan words, news is short, and character n-grams are coarse. Kept as a weak check. |
 | Refitting the stance calibration on live weeks | held-out shift unchanged or worse | The live shift varies from week to week; a fixed linear map cannot follow it. |
 | Gemini 3.5 Flash-Lite as a juror | only 78% of press releases correct | Used only for ranking checks. |
-| Facebook, Threads, Dcard, TikTok | not collected | Login walls, robots.txt bans, bot checks, or research access limited to other regions or to institutions. We did not get around any of them. |
+| Facebook posts, Threads, Dcard, TikTok | not collected | Login walls, robots.txt bans, bot checks, or research access limited to other regions or to institutions. Only Meta's Ad Library is collected (§3.3). |
 
 **Table 9.1.** Ideas we tested and rejected.
 
@@ -409,7 +410,7 @@ Two observations did not survive the checks: a peak of polarisation in July 2025
 
 ## 11. Not done yet
 
-- **Money flows (Method F).** Government procurement, government advertising, political donations and ownership records are collected ([docs/money-sources.md](docs/money-sources.md)). One finding so far: these media companies made no corporate political donations in the open records, while candidates and parties paid them about NT$638 million in 2016–2025, mostly for advertising. The event study linking money to coverage is planned for January 2027.
+- **Money flows (Method F).** Government procurement, government advertising, political donations and ownership records are collected ([docs/money-sources.md](docs/money-sources.md)). One finding so far: these media companies made no corporate political donations in the open records, while candidates and parties paid them about NT$638 million in 2016–2025, mostly for advertising. Money also flows from the outlets to Meta. Since November 2019, the two main Facebook pages of United Daily News (udn.com and 聯合報) have paid about NT$9.1 million for ads that Meta files under social issues, elections or politics, more than the DPP's central page (NT$5.1 million) and the KMT's (NT$2.1 million). Mirror Media (NT$3.4 million), FTV (NT$3.2 million) and SET (NT$1.7 million) follow; CNA has no such ads. The ads mix two things: paid promotion of the outlet's own political news (FTV's pages promoted campaign stories in November 2026), and sponsored content for companies and government bodies, such as sustainability features and road-safety campaigns, which Meta also files as issue ads ([docs/meta-ads.md](docs/meta-ads.md)). The event study linking money to coverage is planned for January 2027.
 - **Release of the model and data** on Hugging Face, and a technical report.
 - **TPP scores** from the decision model.
 - **Social platforms** in the results.
@@ -475,7 +476,7 @@ The website is the single file `docs/index.html`, served by GitHub Pages. To pre
 | §8 election | `scripts/monitor_drift.py`, `recalibrate_stance.py`, `check_source_switch.py`, `campaign_weeks.py` |
 | §10 website | `scripts/export_site.py`, `docs/index.html` |
 | §10.1 other patterns | `scripts/findings.py` |
-| §11 money | `scripts/money/` |
+| §11 money | `scripts/money/`; Meta Ad Library: `scripts/meta_adlibrary.py`, `meta_report_download.py`, `meta_ads_report.py` |
 
 **Technical settings.** BERT base Chinese (CKIP), maximum 512 characters, 3 epochs, learning rate 3 × 10⁻⁵, batch 16. LLM labels come from Vertex AI batch prediction with JSON output. The trend model uses a Kalman filter and RTS smoother, with $\tau$ chosen on a grid by marginal likelihood and an event variance multiplier of 25.
 
@@ -632,6 +633,7 @@ The code is under the [MIT licence](LICENSE). The derived data and model will ca
 
 - 使用誠實的 User-Agent，遵守 robots.txt，每個網站每秒至多一個請求。
 - 不登入，也不繞過封鎖或機器人驗證；被封鎖的來源就停止收集。
+- robots.txt 的唯一例外是 Meta 廣告檔案庫：這是公開的透明度資料庫，robots.txt 禁止一切自動存取，官方 API 又要另行身分驗證，所以我們用開源工具讀取公開網頁與可下載的報告，不登入，每 15 秒一頁（[docs/meta-ads.md](docs/meta-ads.md)）。
 - robots.txt 標示 `ai-train=no` 的來源（PTT、中央社）可以標註與評分，但不用來訓練模型。
 - 不轉載新聞全文，只公開網址、標題、標籤與彙總結果。討論平台的帳號一律雜湊（[docs/privacy.md](docs/privacy.md)）。
 
@@ -851,7 +853,7 @@ x = c + d\,t \quad\Rightarrow\quad \text{校正分數} = \frac{x - c}{d} \qquad 
 | 用語方法排序媒體 | 不同屆期的排序互相矛盾（−0.22 到 0.50） | 書面質詢的黨派用語少、新聞篇幅短、字元 n-gram 太粗。保留為弱檢查。 |
 | 用即時批次重新擬合立場校準 | 被留下那週的偏移不變或更大 | 即時文章的偏移每週不同，固定的直線跟不上。 |
 | 讓 Gemini 3.5 Flash-Lite 當陪審員 | 新聞稿只判對 78% | 只用來檢驗排序，不列入陪審團。 |
-| Facebook、Threads、Dcard、TikTok | 沒有收集 | 登入牆、robots.txt 禁止、機器人驗證，或研究管道只開放給其他地區或學術機構。我們沒有繞過任何一項。 |
+| Facebook 貼文、Threads、Dcard、TikTok | 沒有收集 | 登入牆、robots.txt 禁止、機器人驗證，或研究管道只開放給其他地區或學術機構。Meta 平台只收集廣告檔案庫（§3.3）。 |
 
 **表 9.1** 測試過但放棄的做法。
 
@@ -905,7 +907,7 @@ x = c + d\,t \quad\Rightarrow\quad \text{校正分數} = \frac{x - c}{d} \qquad 
 
 ## 11. 還沒完成的部分
 
-- **資金關聯（方法 F）。** 政府採購、政策宣導、政治獻金與所有權資料已經收集（[docs/money-sources.md](docs/money-sources.md)）。目前的一項發現：在公開紀錄中，這些媒體公司沒有營利事業政治獻金；反方向，2016–2025 年候選人與政黨付給它們約 6.38 億元，以宣傳支出為主。連結資金與報導的事件研究預計 2027 年 1 月進行。
+- **資金關聯（方法 F）。** 政府採購、政策宣導、政治獻金與所有權資料已經收集（[docs/money-sources.md](docs/money-sources.md)）。目前的一項發現：在公開紀錄中，這些媒體公司沒有營利事業政治獻金；反方向，2016–2025 年候選人與政黨付給它們約 6.38 億元，以宣傳支出為主。媒體也付錢給 Meta：2019 年 11 月起，聯合報的兩個主要粉專（udn.com 聯合新聞網、聯合報）在被 Meta 歸為社會議題、選舉或政治類的廣告上花了約 909 萬元，多於民進黨中央粉專（約 514 萬元）與國民黨中央粉專（約 214 萬元）。其次是鏡週刊（約 338 萬元）、民視（約 317 萬元）、三立（約 168 萬元）；中央社沒有這類廣告。這些廣告包含兩類：媒體付費推廣自己的政治新聞（例如民視在 2026 年 11 月推廣選舉新聞），以及替企業或政府機關製作的贊助內容（例如永續專題、交通安全宣導），後者也被 Meta 歸為議題廣告（[docs/meta-ads.md](docs/meta-ads.md)）。連結資金與報導的事件研究預計 2027 年 1 月進行。
 - 在 Hugging Face **公開模型與資料**，以及技術報告。
 - 決策模型的**民眾黨分數**。
 - 把**社群平台**納入結果。
@@ -971,7 +973,7 @@ uv run python scripts/export_site.py      # 寫出 docs/assets/trends.json
 | 第 8 節 選舉 | `scripts/monitor_drift.py`、`recalibrate_stance.py`、`check_source_switch.py`、`campaign_weeks.py` |
 | 第 10 節 網站 | `scripts/export_site.py`、`docs/index.html` |
 | 第 10.1 節 其他規律 | `scripts/findings.py` |
-| 第 11 節 資金 | `scripts/money/` |
+| 第 11 節 資金 | `scripts/money/`；Meta 廣告檔案庫：`scripts/meta_adlibrary.py`、`meta_report_download.py`、`meta_ads_report.py` |
 
 **技術設定。** CKIP 的 BERT base 中文模型，最長 512 字，訓練 3 輪，學習率 3 × 10⁻⁵，批次 16。LLM 標籤來自 Vertex AI 批次預測，輸出 JSON。趨勢模型用卡爾曼濾波加 RTS 平滑，$\tau$ 以邊際概似在格點上選出，事件變異數倍數為 25。
 
